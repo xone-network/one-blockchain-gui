@@ -1,8 +1,8 @@
-import React from 'react';
+import { ServiceName } from '@xone-network/api';
+import { useService } from '@xone-network/api-react';
+import { CardSimple } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { CardSimple } from '@one/core';
-import { ServiceName } from '@one/api';
-import { useService } from '@one/api-react';
+import React from 'react';
 
 export default function FullNodeCardConnectionStatus() {
   const { isRunning, isLoading, error } = useService(ServiceName.FULL_NODE);
@@ -12,9 +12,7 @@ export default function FullNodeCardConnectionStatus() {
       loading={isLoading}
       valueColor={isRunning ? 'primary' : 'textPrimary'}
       title={<Trans>Connection Status</Trans>}
-      value={
-        isRunning ? <Trans>Connected</Trans> : <Trans>Not connected</Trans>
-      }
+      value={isRunning ? <Trans>Connected</Trans> : <Trans>Not connected</Trans>}
       error={error}
     />
   );

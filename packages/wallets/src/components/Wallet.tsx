@@ -1,20 +1,19 @@
-import { Alert } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { WalletType } from '@xone-network/api';
+import { Suspender } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { Suspender } from '@one/core';
-import { WalletType } from '@one/api';
+import { Alert } from '@mui/material';
 import React from 'react';
-import WalletStandard from './standard/WalletStandard';
-import WalletCAT from './cat/WalletCAT';
+import { useParams } from 'react-router-dom';
+
 import useWallet from '../hooks/useWallet';
+import WalletCAT from './cat/WalletCAT';
+import WalletStandard from './standard/WalletStandard';
 
 export default function Wallet() {
   const { walletId } = useParams();
   const { wallet, loading } = useWallet(walletId);
   if (loading) {
-    return (
-      <Suspender />
-    );
+    return <Suspender />;
   }
 
   if (!wallet) {
@@ -26,24 +25,12 @@ export default function Wallet() {
   }
 
   if (wallet.type === WalletType.STANDARD_WALLET) {
-    return (
-      <WalletStandard walletId={Number(walletId)} />
-    );
+    return <WalletStandard walletId={Number(walletId)} />;
   }
 
   if (wallet.type === WalletType.CAT) {
-    return (
-      <WalletCAT walletId={Number(walletId)} />
-    );
+    return <WalletCAT walletId={Number(walletId)} />;
   }
-
-  {/* wallet.type === WalletType.RATE_LIMITED && (
-    <RateLimitedWallet wallet_id={wallet.id} />
-  ) */}
-
-  {/* wallet.type === WalletType.DECENTRALIZED_ID && (
-    <DistributedWallet walletId={wallet.id} />
-  ) */}
 
   return (
     <Alert severity="warning">

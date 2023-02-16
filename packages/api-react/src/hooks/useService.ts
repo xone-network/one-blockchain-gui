@@ -1,10 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
-import { ServiceName } from '@one/api';
+import { ServiceName } from '@xone-network/api';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+
 import { useClientStartServiceMutation } from '../services/client';
-import {
-  useStopServiceMutation,
-  useRunningServicesQuery,
-} from '../services/daemon';
+import { useStopServiceMutation, useRunningServicesQuery } from '../services/daemon';
 
 export type ServiceState = 'starting' | 'running' | 'stopping' | 'stopped';
 
@@ -38,22 +36,20 @@ export default function useService(
   // isRunning is not working when stopService is called (backend issue)
   const {
     data: runningServices,
-    isLoading: isLoading,
+    isLoading,
     refetch,
     error,
   } = useRunningServicesQuery(
     {},
     {
-      pollingInterval: latestIsProcessing ? 1_000 : 10_000,
+      pollingInterval: latestIsProcessing ? 1000 : 10_000,
       skip: disabled,
-      selectFromResult: (state) => {
-        return {
-          data: state.data,
-          refetch: state.refetch,
-          error: state.error,
-          isLoading: state.isLoading,
-        };
-      },
+      selectFromResult: (state) => ({
+        data: state.data,
+        refetch: state.refetch,
+        error: state.error,
+        isLoading: state.isLoading,
+      }),
     }
   );
 
@@ -77,7 +73,7 @@ export default function useService(
     state = 'running';
   }
 
-  async function handleStart() {
+  const handleStart = useCallback(async () => {
     if (isProcessing) {
       return;
     }
@@ -93,9 +89,9 @@ export default function useService(
     } finally {
       setIsStarting(false);
     }
-  }
+  }, [disableWait, isProcessing, refetch, service, startService]);
 
-  async function handleStop() {
+  const handleStop = useCallback(async () => {
     if (isProcessing) {
       return;
     }
@@ -110,29 +106,19 @@ export default function useService(
     } finally {
       setIsStopping(false);
     }
-  }
+  }, [isProcessing, refetch, service, stopService]);
 
   useEffect(() => {
     if (disabled) {
       return;
     }
 
-    if (
-      keepState === 'running' &&
-      keepState !== state &&
-      !isProcessing &&
-      isRunning === false
-    ) {
+    if (keepState === 'running' && keepState !== state && !isProcessing && isRunning === false) {
       handleStart();
-    } else if (
-      keepState === 'stopped' &&
-      keepState !== state &&
-      !isProcessing &&
-      isRunning === true
-    ) {
+    } else if (keepState === 'stopped' && keepState !== state && !isProcessing && isRunning === true) {
       handleStop();
     }
-  }, [keepState, state, isProcessing, disabled, isRunning]);
+  }, [keepState, state, isProcessing, disabled, isRunning, handleStart, handleStop]);
 
   return {
     state,

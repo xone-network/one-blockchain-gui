@@ -1,7 +1,9 @@
-import { OfferTradeRecord } from '@one/api';
-import { useGetOfferDataMutation } from '@one/api-react';
-import { useShowSaveDialog } from '@one/core';
 import fs from 'fs';
+
+import { OfferTradeRecord } from '@xone-network/api';
+import { useGetOfferDataMutation } from '@xone-network/api-react';
+import { useShowSaveDialog } from '@xone-network/core';
+
 import { suggestedFilenameForOffer } from '../components/offers/utils';
 import useAssetIdName from './useAssetIdName';
 
@@ -21,10 +23,7 @@ export default function useSaveOfferFile(): [SaveOfferFileHook] {
     const { offer: offerData, tradeRecord, success } = response;
     if (success === true) {
       const dialogOptions = {
-        defaultPath: suggestedFilenameForOffer(
-          tradeRecord.summary,
-          lookupByAssetId,
-        ),
+        defaultPath: suggestedFilenameForOffer(tradeRecord.summary, lookupByAssetId),
       };
       const result = await showSaveDialog(dialogOptions);
       const { filePath, canceled } = result;

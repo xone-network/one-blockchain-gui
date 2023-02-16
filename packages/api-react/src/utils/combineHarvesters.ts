@@ -1,4 +1,4 @@
-import type { Plot } from '@one/api';
+import type { Plot } from '@xone-network/api';
 
 export default function combineHarvesters(harvesters): {
   plots: Plot[];

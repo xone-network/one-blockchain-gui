@@ -1,4 +1,5 @@
-import { SyncingStatus } from '@one/api';
+import { SyncingStatus } from '@xone-network/api';
+
 import useWalletState from './useWalletState';
 
 export default function useIsWalletSynced(): boolean {

@@ -1,8 +1,8 @@
-import React from 'react';
-import isElectron from 'is-electron';
-import { Trans } from '@lingui/macro';
-import { AlertDialog, useOpenDialog } from '@one/core';
+import { AlertDialog, useOpenDialog } from '@xone-network/core';
 import { dialog } from '@electron/remote';
+import { Trans } from '@lingui/macro';
+import isElectron from 'is-electron';
+import React from 'react';
 
 type Options = {
   defaultPath?: string;
@@ -10,7 +10,7 @@ type Options = {
 };
 
 export default function useSelectDirectory(
-  defaultOptions?: Options,
+  defaultOptions?: Options
 ): (options?: Options) => Promise<string | undefined> {
   const openDialog = useOpenDialog();
 
@@ -30,8 +30,9 @@ export default function useSelectDirectory(
     openDialog(
       <AlertDialog>
         <Trans>This feature is available only from the GUI.</Trans>
-      </AlertDialog>,
+      </AlertDialog>
     );
+    return undefined;
   }
 
   return handleSelect;

@@ -1,17 +1,13 @@
-import React, { useMemo } from 'react';
+import { Loading, oneToMojo, mojoToOneLocaleString, useCurrencyCode } from '@xone-network/core';
+import { Farming } from '@xone-network/icons';
 import { Trans } from '@lingui/macro';
+import React, { useMemo } from 'react';
 import { useFieldArray, useWatch } from 'react-hook-form';
-import { Farming } from '@one/icons';
-import {
-  Loading,
-  oneToMojo,
-  mojoToOneLocaleString,
-  useCurrencyCode,
-} from '@one/core';
-import OfferBuilderSection from './OfferBuilderSection';
-import OfferBuilderWalletAmount from './OfferBuilderWalletAmount';
+
 import useOfferBuilderContext from '../../hooks/useOfferBuilderContext';
 import useStandardWallet from '../../hooks/useStandardWallet';
+import OfferBuilderSection from './OfferBuilderSection';
+import OfferBuilderWalletAmount from './OfferBuilderWalletAmount';
 
 export type OfferBuilderXONESectionProps = {
   name: string;
@@ -19,9 +15,7 @@ export type OfferBuilderXONESectionProps = {
   muted?: boolean;
 };
 
-export default function OfferBuilderXONESection(
-  props: OfferBuilderXONESectionProps,
-) {
+export default function OfferBuilderXONESection(props: OfferBuilderXONESectionProps) {
   const { name, offering, muted = false } = props;
   const { wallet, loading: isLoadingWallet } = useStandardWallet();
   const currencyCode = useCurrencyCode();
@@ -32,12 +26,7 @@ export default function OfferBuilderXONESection(
     useWatch({
       name,
     })?.[0]?.amount ?? 0; // Assume there's only 1 XONE field per trade side
-  const {
-    readOnly,
-    requestedRoyalties,
-    offeredRoyalties,
-    isCalculatingRoyalties,
-  } = useOfferBuilderContext();
+  const { requestedRoyalties, offeredRoyalties, isCalculatingRoyalties } = useOfferBuilderContext();
 
   // Yes, this is correct. Fungible (XONE) assets used to pay royalties are from the opposite side of the trade.
   const allRoyalties = offering ? requestedRoyalties : offeredRoyalties;
@@ -45,18 +34,16 @@ export default function OfferBuilderXONESection(
   const loading = isLoadingWallet || isCalculatingRoyalties;
 
   const [amountWithRoyalties, royaltyPayments] = useMemo(() => {
-    if (!readOnly || !allRoyalties) {
+    if (!allRoyalties) {
       return [];
     }
 
-    let amountWithRoyalties = oneToMojo(amount);
+    let amountWithRoyaltiesLocal = oneToMojo(amount);
     const rows: Record<string, any>[] = [];
-    Object.entries(allRoyalties).forEach(([nftId, royaltyPayments]) => {
-      const matchingPayment = royaltyPayments?.find(
-        (payment) => payment.asset === 'xone',
-      );
+    Object.entries(allRoyalties).forEach(([nftId, royaltyPaymentsLocal]) => {
+      const matchingPayment = royaltyPaymentsLocal?.find((payment) => payment.asset === 'xone');
       if (matchingPayment) {
-        amountWithRoyalties = amountWithRoyalties.plus(matchingPayment.amount);
+        amountWithRoyaltiesLocal = amountWithRoyaltiesLocal.plus(matchingPayment.amount);
         rows.push({
           nftId,
           payment: {
@@ -67,8 +54,8 @@ export default function OfferBuilderXONESection(
       }
     });
 
-    return [mojoToOneLocaleString(amountWithRoyalties), rows];
-  }, [readOnly, allRoyalties]);
+    return [mojoToOneLocaleString(amountWithRoyaltiesLocal), rows];
+  }, [allRoyalties, amount]);
 
   function handleAdd() {
     if (!fields.length) {
@@ -86,12 +73,7 @@ export default function OfferBuilderXONESection(
     <OfferBuilderSection
       icon={<Farming />}
       title={currencyCode}
-      subtitle={
-        <Trans>
-          One ({currencyCode}) is a digital currency that is secure and
-          sustainable
-        </Trans>
-      }
+      subtitle={<Trans>One ({currencyCode}) is a digital currency that is secure and sustainable</Trans>}
       onAdd={!fields.length ? handleAdd : undefined}
       expanded={!!fields.length}
       muted={muted}

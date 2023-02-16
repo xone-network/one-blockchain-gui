@@ -1,7 +1,8 @@
-import React, { ReactElement } from 'react';
+import { useGetWalletBalanceQuery } from '@xone-network/api-react';
+import { CardSimple } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { useGetWalletBalanceQuery } from '@one/api-react';
-import { CardSimple } from '@one/core';
+import React, { ReactElement } from 'react';
+
 import useWallet from '../../hooks/useWallet';
 import useWalletHumanValue from '../../hooks/useWalletHumanValue';
 
@@ -16,11 +17,14 @@ export default function WalletCardPendingBalance(props: Props) {
     data: walletBalance,
     isLoading: isLoadingWalletBalance,
     error,
-  } = useGetWalletBalanceQuery({
-    walletId,
-  }, {
-    pollingInterval: 10000,
-  });
+  } = useGetWalletBalanceQuery(
+    {
+      walletId,
+    },
+    {
+      pollingInterval: 10_000,
+    }
+  );
 
   const { wallet, unit = '', loading } = useWallet(walletId);
 

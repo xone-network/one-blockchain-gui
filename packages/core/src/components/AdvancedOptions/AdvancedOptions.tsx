@@ -1,18 +1,17 @@
-import React, { ReactNode } from 'react';
 import { Trans } from '@lingui/macro';
-import { useToggle } from 'react-use';
-import { Typography } from '@mui/material';
-import styled from 'styled-components';
 import {
   KeyboardArrowUp as KeyboardArrowUpIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
-import Flex from '../Flex';
-import Accordion from '../Accordion';
+import { Typography } from '@mui/material';
+import React, { ReactNode } from 'react';
+import { useToggle } from 'react-use';
+import styled from 'styled-components';
 
-const StyledToggleAdvancedOptions = styled(({ expanded, ...rest }) => (
-  <Typography {...rest} />
-))`
+import Accordion from '../Accordion';
+import Flex from '../Flex';
+
+const StyledToggleAdvancedOptions = styled(({ expanded, ...rest }) => <Typography {...rest} />)`
   cursor: pointer;
 `;
 
@@ -27,10 +26,10 @@ type Props = {
 export default function AdvancedOptions(props: Props) {
   const {
     children,
-    expanded: defaultExpanded,
-    hideExpanded,
-    moreTitle,
-    lessTitle,
+    expanded: defaultExpanded = false,
+    hideExpanded = false,
+    moreTitle = <Trans>Show Advanced Options</Trans>,
+    lessTitle = <Trans>Hide Advanced Options</Trans>,
   } = props;
   const [isExpanded, setIsExpanded] = useToggle(defaultExpanded);
 
@@ -43,11 +42,7 @@ export default function AdvancedOptions(props: Props) {
   return (
     <Flex flexDirection="column" gap={1}>
       {!hideTitle && (
-        <StyledToggleAdvancedOptions
-          variant="caption"
-          expanded={isExpanded}
-          onClick={handleToggle}
-        >
+        <StyledToggleAdvancedOptions variant="caption" expanded={isExpanded} onClick={handleToggle}>
           {isExpanded ? (
             <Flex alignItems="center">
               <KeyboardArrowUpIcon />
@@ -66,11 +61,3 @@ export default function AdvancedOptions(props: Props) {
     </Flex>
   );
 }
-
-AdvancedOptions.defaultProps = {
-  expanded: false,
-  children: undefined,
-  hideExpanded: false,
-  moreTitle: <Trans>Show Advanced Options</Trans>,
-  lessTitle: <Trans>Hide Advanced Options</Trans>,
-};

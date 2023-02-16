@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Trans } from '@lingui/macro';
-import type { NFTInfo } from '@one/api';
+import type { NFTInfo } from '@xone-network/api';
+import { useTransferNFTMutation } from '@xone-network/api-react';
 import {
   Button,
   ButtonLoading,
-  Fee,
+  EstimatedFee,
   Form,
   Flex,
   TextField,
@@ -13,17 +12,12 @@ import {
   useOpenDialog,
   validAddress,
   useShowError,
-} from '@one/core';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
+} from '@xone-network/core';
+import { Trans } from '@lingui/macro';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTransferNFTMutation } from '@one/api-react';
+
 import NFTSummary from './NFTSummary';
 import NFTTransferConfirmationDialog from './NFTTransferConfirmationDialog';
 
@@ -55,13 +49,13 @@ type NFTTransferFormData = {
 };
 
 type NFTTransferActionProps = {
-  nft: NFTInfo;
+  nfts: NFTInfo[];
   destination?: string;
   onComplete?: (result?: NFTTransferResult) => void;
 };
 
 export default function NFTTransferAction(props: NFTTransferActionProps) {
-  const { nft, destination = '', onComplete } = props;
+  const { nfts, destination = '', onComplete } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [transferNFT] = useTransferNFTMutation();
   const openDialog = useOpenDialog();
@@ -82,31 +76,38 @@ export default function NFTTransferAction(props: NFTTransferActionProps) {
   }
 
   async function handleSubmit(formData: NFTTransferFormData) {
-    const { destination, fee } = formData;
+    const { destination: destinationLocal, fee } = formData;
     const feeInMojos = oneToMojo(fee || 0);
 
     try {
       if (!currencyCode) {
         throw new Error('Selected network address prefix is not defined');
       }
-      validAddress(destination, [currencyCode.toLowerCase()]);
+      validAddress(destinationLocal, [currencyCode.toLowerCase()]);
     } catch (error) {
       showError(error);
       return;
     }
 
+    const description = nfts.length > 1 && (
+      <Trans>
+        Once you initiate this transfer, you will not be able to cancel the transaction. Are you sure you want to
+        transfer {nfts.length} NFTs?
+      </Trans>
+    );
+
     const confirmation = await openDialog(
-      <NFTTransferConfirmationDialog destination={destination} fee={fee} />,
+      <NFTTransferConfirmationDialog destination={destinationLocal} fee={fee} description={description} />
     );
 
     if (confirmation) {
       setIsLoading(true);
 
       const { error, data: response } = await transferNFT({
-        walletId: nft.walletId,
-        nftCoinId: nft.nftCoinId,
-        launcherId: nft.launcherId,
-        targetAddress: destination,
+        walletId: nfts[0].walletId,
+        nftCoinIds: nfts.map((nft: NFTInfo) => nft.nftCoinId),
+        launcherId: nfts[0].launcherId,
+        targetAddress: destinationLocal,
         fee: feeInMojos,
       });
       const success = response?.success ?? false;
@@ -117,23 +118,29 @@ export default function NFTTransferAction(props: NFTTransferActionProps) {
       if (onComplete) {
         onComplete({
           success,
-          transferInfo: {
-            nftAssetId: nft.nftCoinId,
-            destination,
-            fee,
-          },
           error: errorMessage,
         });
       }
     }
   }
 
+  function renderNFTPreview() {
+    if (nfts.length === 1) {
+      return (
+        <Flex flexDirection="column" gap={1}>
+          <NFTSummary launcherId={nfts[0].launcherId} />
+        </Flex>
+      );
+    }
+    return null;
+  }
+
+  <NFTSummary launcherId={nfts[0].launcherId} />;
+
   return (
     <Form methods={methods} onSubmit={handleSubmit}>
       <Flex flexDirection="column" gap={3}>
-        <Flex flexDirection="column" gap={1}>
-          <NFTSummary launcherId={nft.launcherId} />
-        </Flex>
+        {renderNFTPreview()}
         <TextField
           name="destination"
           variant="filled"
@@ -143,31 +150,22 @@ export default function NFTTransferAction(props: NFTTransferActionProps) {
           disabled={isLoading}
           required
         />
-        <Fee
+        <EstimatedFee
           id="filled-secondary"
           variant="filled"
           name="fee"
           color="secondary"
           label={<Trans>Fee</Trans>}
           disabled={isLoading}
+          txType="transferNFT"
+          fullWidth
         />
         <DialogActions>
           <Flex flexDirection="row" gap={3}>
-            <Button
-              onClick={handleClose}
-              color="secondary"
-              variant="outlined"
-              autoFocus
-            >
+            <Button onClick={handleClose} color="secondary" variant="outlined" autoFocus>
               <Trans>Close</Trans>
             </Button>
-            <ButtonLoading
-              type="submit"
-              autoFocus
-              color="primary"
-              variant="contained"
-              loading={isLoading}
-            >
+            <ButtonLoading type="submit" autoFocus color="primary" variant="contained" loading={isLoading}>
               <Trans>Transfer</Trans>
             </ButtonLoading>
           </Flex>
@@ -182,22 +180,22 @@ export default function NFTTransferAction(props: NFTTransferActionProps) {
 /* ========================================================================== */
 
 type NFTTransferDialogProps = {
-  open: boolean;
-  onClose: (value: any) => void;
+  open?: boolean;
+  onClose?: (value: any) => void;
   onComplete?: (result?: NFTTransferResult) => void;
-  nft: NFTInfo;
+  nfts: NFTInfo[];
   destination?: string;
 };
 
 export function NFTTransferDialog(props: NFTTransferDialogProps) {
-  const { open, onClose, onComplete, nft, destination, ...rest } = props;
+  const { open, onClose, onComplete, nfts, destination, ...rest } = props;
 
   function handleClose() {
-    onClose(false);
+    if (onClose) onClose(false);
   }
 
   function handleCompletion(result?: NFTTransferResult) {
-    onClose(true);
+    if (onClose) onClose(true);
     if (onComplete) {
       onComplete(result);
     }
@@ -223,22 +221,15 @@ export function NFTTransferDialog(props: NFTTransferDialogProps) {
       <DialogContent>
         <Flex flexDirection="column" gap={3}>
           <DialogContentText id="nft-transfer-dialog-description">
-            <Trans>
-              Would you like to transfer the specified NFT to a new owner?
-            </Trans>
+            {nfts.length > 1 ? (
+              <Trans id="Would you like to transfer {count} NFTs to a new owner?" values={{ count: nfts.length }} />
+            ) : (
+              <Trans>Would you like to transfer the specified NFT to a new owner</Trans>
+            )}
           </DialogContentText>
-          <NFTTransferAction
-            nft={nft}
-            destination={destination}
-            onComplete={handleCompletion}
-          />
+          <NFTTransferAction nfts={nfts} destination={destination} onComplete={handleCompletion} />
         </Flex>
       </DialogContent>
     </Dialog>
   );
 }
-
-NFTTransferDialog.defaultProps = {
-  open: false,
-  onClose: () => {},
-};

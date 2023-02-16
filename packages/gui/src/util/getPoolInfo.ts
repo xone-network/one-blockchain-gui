@@ -1,5 +1,5 @@
-import type { PoolInfo } from '@one/api';
-import { toCamelCase } from '@one/api';
+import type { PoolInfo } from '@xone-network/api';
+import { toCamelCase } from '@xone-network/api';
 
 export default async function getPoolInfo(poolUrl: string): PoolInfo {
   const url = `${poolUrl}/pool_info`;

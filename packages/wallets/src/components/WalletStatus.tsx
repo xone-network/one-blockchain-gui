@@ -1,10 +1,11 @@
-import React from 'react';
+import { SyncingStatus } from '@xone-network/api';
+import { useGetSyncStatusQuery } from '@xone-network/api-react';
+import { Loading, State, StateIndicator } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { Loading, State, StateIndicator } from '@one/core';
-import { useGetSyncStatusQuery } from '@one/api-react';
 import { Box, Typography } from '@mui/material';
+import React from 'react';
+
 import getWalletSyncingStatus from '../utils/getWalletSyncingStatus';
-import { SyncingStatus } from '@one/api';
 import WalletStatusHeight from './WalletStatusHeight';
 
 export type WalletStatusProps = {
@@ -32,7 +33,7 @@ export default function WalletStatus(props: WalletStatusProps) {
   const { data: walletState, isLoading } = useGetSyncStatusQuery(
     {},
     {
-      pollingInterval: 10000,
+      pollingInterval: 10_000,
     }
   );
 

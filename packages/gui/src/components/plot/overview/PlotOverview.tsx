@@ -1,7 +1,8 @@
-import React from 'react';
-import { Loading, Flex } from '@one/core';
-import { useGetThrottlePlotQueueQuery, useGetTotalHarvestersSummaryQuery } from '@one/api-react';
+import { useGetThrottlePlotQueueQuery, useGetTotalHarvestersSummaryQuery } from '@xone-network/api-react';
+import { Loading, Flex } from '@xone-network/core';
 import { Grid } from '@mui/material';
+import React from 'react';
+
 import PlotHero from './PlotOverviewHero';
 import PlotOverviewPlots from './PlotOverviewPlots';
 

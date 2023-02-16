@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import { useGetFarmedAmountQuery } from '@xone-network/api-react';
+import { useCurrencyCode, mojoToOneLocaleString, CardSimple, useLocale } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { useCurrencyCode, mojoToOneLocaleString, CardSimple, useLocale } from '@one/core';
-import { useGetFarmedAmountQuery } from '@one/api-react';
+import React, { useMemo } from 'react';
 
 export default function FarmCardTotalOneFarmed() {
   const currencyCode = useCurrencyCode();
@@ -20,14 +20,10 @@ export default function FarmCardTotalOneFarmed() {
         </>
       );
     }
+    return undefined;
   }, [farmedAmount, locale, currencyCode]);
 
   return (
-    <CardSimple
-      title={<Trans>Total One Farmed</Trans>}
-      value={totalOneFarmed}
-      loading={isLoading}
-      error={error}
-    />
+    <CardSimple title={<Trans>Total One Farmed</Trans>} value={totalOneFarmed} loading={isLoading} error={error} />
   );
 }

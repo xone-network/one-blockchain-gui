@@ -1,9 +1,11 @@
-# @one/api-react
+# one-blockchain-gui/api-react
 
-![Alt text](https://www.one.top/img/one_logo.svg)
+![One logo](https://www.onechain.vip/wp-content/uploads/2022/09/one-logo.svg)
 
-This library provides react hooks on the top of @one/api and uses [RTK Query](https://redux-toolkit.js.org/rtk-query/overview) under do hood.
-It is designed to simplify common cases for loading data in a web application, eliminating the need to hand-write data fetching & caching logic yourself. Providing much more benefits:
+![GitHub contributors](https://img.shields.io/github/contributors/xone-network/one-blockchain-gui?logo=GitHub)
+
+This library provides react hooks on the top of @xone-network/api and uses [RTK Query](https://redux-toolkit.js.org/rtk-query/overview) under the hood.
+It is designed to simplify common cases for loading data in a web application, eliminating the need to hand-write data fetching & caching logic yourself. Benefits include:
 
 - Automatically refresh queries when data changed (using events from One Blockchain).
 - Tracking loading state in order to show UI spinners.
@@ -19,32 +21,24 @@ It is designed to simplify common cases for loading data in a web application, e
 
 ```tsx
 import React from 'react';
-import { useGetPublicKeysQuery } from '@one/api-react';
+import { useGetPublicKeysQuery } from '@xone-network/api-react';
 import Suspender from 'react-suspender';
 
 export default function PublicKeys() {
   const { data: publicKeys, isLoading, error } = useGetPublicKeysQuery();
 
   if (isLoading) {
-    return (
-      <Suspender />
-    );
+    return <Suspender />;
   }
 
   if (error) {
-    return (
-      <Alert severiry="error">
-        {error.message}
-      </Alert>
-    );
+    return <Alert severity="error">{error.message}</Alert>;
   }
 
   return (
     <ul>
-      {publicKeys.map(key => (
-        <li key={key}>
-          {key}
-        </li>
+      {publicKeys.map((key) => (
+        <li key={key}>{key}</li>
       ))}
     </ul>
   );
@@ -56,7 +50,7 @@ export default function PublicKeys() {
 ```tsx
 import React, { Suspense } from 'react';
 import Websocket from 'ws'; // or read this value from electron main application
-import { store, api } from '@one/api-react';
+import { store, api } from '@xone-network/api-react';
 import PublicKeys from './PublicKeys';
 
 // prepare api
@@ -71,9 +65,13 @@ export default function Application() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Provider store={store}>
-        <PublickKeys />
+        <PublicKeys />
       </Provider>
     </Suspense>
   );
 }
 ```
+
+## Development
+
+Please read and follow the main [README.md](https://github.com/xone-network/one-blockchain-gui) of this monorepo.

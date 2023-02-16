@@ -1,4 +1,4 @@
-import type NFTInfo from '@one/api';
+import type NFTInfo from '@xone-network/api';
 
 type NFTSelection = {
   items: NFTInfo[];

@@ -1,7 +1,7 @@
-import React from 'react';
+import { useGetTotalHarvestersSummaryQuery } from '@xone-network/api-react';
+import { FormatBytes, CardSimple } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { FormatBytes, CardSimple } from '@one/core';
-import { useGetTotalHarvestersSummaryQuery } from '@one/api-react';
+import React from 'react';
 
 export default function FarmCardTotalSizeOfPlots() {
   const { totalPlotSize, isLoading } = useGetTotalHarvestersSummaryQuery();

@@ -1,4 +1,5 @@
-import { WalletType } from '@one/api';
+import { WalletType } from '@xone-network/api';
+
 import findCATWalletByAssetId from './findCATWalletByAssetId';
 
 describe('findCATWalletByAssetId', () => {

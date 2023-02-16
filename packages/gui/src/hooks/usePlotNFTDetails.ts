@@ -1,6 +1,7 @@
+import type { PlotNFT, Plot } from '@xone-network/api';
+import { useIsWalletSynced } from '@xone-network/wallets';
 import { useMemo } from 'react';
-import type { PlotNFT, Plot } from '@one/api';
-import { useIsWalletSynced } from '@one/wallets';
+
 import PlotNFTState from '../constants/PlotNFTState';
 import usePlotNFTName from './usePlotNFTName';
 

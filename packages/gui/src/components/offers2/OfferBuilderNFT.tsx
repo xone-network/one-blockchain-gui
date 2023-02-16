@@ -1,29 +1,23 @@
-import React from 'react';
+import { useGetNFTInfoQuery } from '@xone-network/api-react';
+import { Flex, Loading, Tooltip } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { Flex, Loading, Tooltip } from '@one/core';
-import { useGetNFTInfoQuery } from '@one/api-react';
-import { useWatch } from 'react-hook-form';
 import { Grid, Typography, Card } from '@mui/material';
-import NFTCard from '../nfts/NFTCard';
-import { launcherIdFromNFTId } from '../../util/nfts';
+import React from 'react';
+import { useWatch } from 'react-hook-form';
+
 import useNFTMinterDID from '../../hooks/useNFTMinterDID';
+import { launcherIdFromNFTId } from '../../util/nfts';
+import NFTCard from '../nfts/NFTCard';
 import { NFTContextualActionTypes } from '../nfts/NFTContextualActions';
-import OfferBuilderValue from './OfferBuilderValue';
 import OfferBuilderNFTProvenance from './OfferBuilderNFTProvenance';
 import OfferBuilderNFTRoyalties from './OfferBuilderNFTRoyalties';
+import OfferBuilderValue from './OfferBuilderValue';
 
 function PreviewCard(props) {
   const { children } = props;
   return (
     <Card sx={{ minHeight: 362 }} variant="outlined">
-      <Flex
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        flexGrow={1}
-        gap={1}
-        padding={3}
-      >
+      <Flex flexDirection="column" alignItems="center" justifyContent="center" flexGrow={1} gap={1} padding={3}>
         {children}
       </Flex>
     </Card>
@@ -36,16 +30,11 @@ export type OfferBuilderNFTProps = {
   provenance?: boolean;
   showRoyalties?: boolean;
   offering?: boolean;
+  onSelectNFT: (name: string, nftId: string) => void;
 };
 
 export default function OfferBuilderNFT(props: OfferBuilderNFTProps) {
-  const {
-    name,
-    provenance = false,
-    showRoyalties = false,
-    onRemove,
-    offering = false,
-  } = props;
+  const { name, provenance = false, showRoyalties = false, onRemove, offering = false, onSelectNFT } = props;
 
   const fieldName = `${name}.nftId`;
   const value = useWatch({
@@ -73,6 +62,7 @@ export default function OfferBuilderNFT(props: OfferBuilderNFTProps) {
           type="text"
           label={<Trans>NFT ID</Trans>}
           onRemove={onRemove}
+          onSelectNFT={onSelectNFT}
         />
         {(minterDID || minterDIDName) && (
           <Flex flexDirection="column" gap={1}>
@@ -116,9 +106,9 @@ export default function OfferBuilderNFT(props: OfferBuilderNFTProps) {
                   nft={nft}
                   canExpandDetails={false}
                   availableActions={
-                    NFTContextualActionTypes.CopyNFTId |
-                    NFTContextualActionTypes.ViewOnExplorer |
-                    NFTContextualActionTypes.OpenInBrowser |
+                    NFTContextualActionTypes.CopyNFTId +
+                    NFTContextualActionTypes.ViewOnExplorer +
+                    NFTContextualActionTypes.OpenInBrowser +
                     NFTContextualActionTypes.CopyURL
                   }
                   isOffer
@@ -133,12 +123,8 @@ export default function OfferBuilderNFT(props: OfferBuilderNFTProps) {
             </Grid>
             <Grid xs={12} md={6} item>
               <Flex flexDirection="column" gap={2}>
-                {showRoyalties && hasNFT && (
-                  <OfferBuilderNFTRoyalties nft={nft} offering={offering} />
-                )}
-                {provenance && hasNFT && (
-                  <OfferBuilderNFTProvenance nft={nft} />
-                )}
+                {showRoyalties && hasNFT && <OfferBuilderNFTRoyalties nft={nft} offering={offering} />}
+                {provenance && hasNFT && <OfferBuilderNFTProvenance nft={nft} />}
               </Flex>
             </Grid>
           </Grid>

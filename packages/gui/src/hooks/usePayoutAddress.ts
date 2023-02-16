@@ -1,6 +1,6 @@
-import { toBech32m, fromBech32m } from '@one/api';
-import type { PlotNFT } from '@one/api';
-import { useSetPayoutInstructionsMutation, useGetNetworkInfoQuery } from '@one/api-react';
+import { toBech32m, fromBech32m } from '@xone-network/api';
+import type { PlotNFT } from '@xone-network/api';
+import { useSetPayoutInstructionsMutation, useGetNetworkInfoQuery } from '@xone-network/api-react';
 
 export default function usePayoutAddress(nft: PlotNFT): {
   loading: boolean;
@@ -25,7 +25,7 @@ export default function usePayoutAddress(nft: PlotNFT): {
     let newPayoutInstructions: string;
 
     try {
-      newPayoutInstructions = fromBech32m(newPayoutAddress)
+      newPayoutInstructions = fromBech32m(newPayoutAddress);
     } catch {
       newPayoutInstructions = newPayoutAddress;
     }
@@ -47,7 +47,7 @@ export default function usePayoutAddress(nft: PlotNFT): {
   let payoutAddress: string;
 
   try {
-    payoutAddress = toBech32m(payoutInstructions, networkPrefix)
+    payoutAddress = toBech32m(payoutInstructions, networkPrefix);
   } catch {
     payoutAddress = payoutInstructions;
   }

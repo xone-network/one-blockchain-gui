@@ -1,4 +1,4 @@
-import { toBech32m, fromBech32m } from '@one/api';
+import { toBech32m, fromBech32m } from '@xone-network/api';
 
 function stripHexPrefix(hex: string) {
   if (hex.startsWith('0x') || hex.startsWith('0X')) {
@@ -12,7 +12,7 @@ export function didToDIDId(did: string): string {
 }
 
 export function didFromDIDId(didId: string): string | undefined {
-  let decoded: string | undefined = undefined;
+  let decoded: string | undefined;
 
   try {
     decoded = fromBech32m(didId);

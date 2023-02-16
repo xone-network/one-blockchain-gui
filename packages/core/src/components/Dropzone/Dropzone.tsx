@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
 import { Paper, CircularProgress } from '@mui/material';
-import styled from 'styled-components';
+import React, { ReactNode } from 'react';
 import { useDropzone, DropzoneOptions } from 'react-dropzone';
+import styled from 'styled-components';
+
 import AspectRatio from '../AspectRatio';
 import Flex from '../Flex';
 
@@ -28,8 +29,8 @@ export default function Dropzone(props: Props) {
     onDrop,
     maxFiles,
     accept,
-    ratio,
-    processing,
+    ratio = 16 / 6,
+    processing = false,
     background: Background = StyledPaper,
   } = props;
 
@@ -43,35 +44,18 @@ export default function Dropzone(props: Props) {
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone(config);
-  const childrenContent =
-    typeof children === 'function' ? children({ isDragActive }) : children;
+  const childrenContent = typeof children === 'function' ? children({ isDragActive }) : children;
 
   return (
     <div {...getRootProps()}>
       <input {...getInputProps()} />
       <Background>
         <AspectRatio ratio={ratio}>
-          <Flex
-            alignItems="center"
-            justifyContent="center"
-            flexDirection="column"
-            height="100%"
-          >
-            {processing ? (
-              <CircularProgress color="secondary" />
-            ) : (
-              childrenContent
-            )}
+          <Flex alignItems="center" justifyContent="center" flexDirection="column" height="100%">
+            {processing ? <CircularProgress color="secondary" /> : childrenContent}
           </Flex>
         </AspectRatio>
       </Background>
     </div>
   );
 }
-
-Dropzone.defaultProps = {
-  maxFiles: undefined,
-  accept: undefined,
-  ratio: 16 / 6,
-  processing: false,
-};

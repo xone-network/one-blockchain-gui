@@ -1,12 +1,11 @@
 {
-  "name": "@one/api",
-  "author": "One Network <hello@one.top> (https://one.top/)",
+  "name": "@xone-network/api",
+  "author": "One Network <admin@onechain.vip> (https://onechain.vip/)",
   "description": "One API Library",
   "productName": "One Blockchain",
-  "private": true,
   "version": "1.0.0",
   "engines": {
-    "node": ">=12.20.0"
+    "node": ">=16.15.0"
   },
   "main": "dist/index.js",
   "module": "dist/esm.js",
@@ -16,6 +15,7 @@
     "build:js": "rollup -c",
     "build:watch": "rollup -c -w",
     "build:types": "tsc --emitDeclarationOnly",
+    "check:types": "tsc --noEmit --emitDeclarationOnly false",
     "test": "jest"
   },
   "dependencies": {
@@ -43,7 +43,6 @@
     "@types/json-bigint": "1.0.1",
     "@types/lodash": "4.14.178",
     "@types/node": "17.0.10",
-    "cross-env": "7.0.3",
     "jest": "29.0.3",
     "rollup": "2.64.0",
     "rollup-plugin-node-externals": "3.1.2",

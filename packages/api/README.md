@@ -1,8 +1,10 @@
-# @one/api
+# one-blockchain-gui/api
 
-![Alt text](https://www.one.top/img/one_logo.svg)
+![One logo](https://www.onechain.vip/wp-content/uploads/2022/09/one-logo.svg)
 
-This library provides support for TypeScript/JavaScript [One](https://www.one.top) apps to access the [One Blockchain RPC](https://github.com/xone-network/one-blockchain/wiki/RPC-Interfaces), by making it easier to perform the following actions:
+![GitHub contributors](https://img.shields.io/github/contributors/xone-network/one-blockchain-gui?logo=GitHub)
+
+This library provides support for TypeScript/JavaScript [One](https://www.onechain.vip) apps to access the [One Blockchain RPC](https://docs.onechain.vip/rpc/), by making it easier to perform the following actions:
 
 - Making requests to the One Blockchain RPC.
 - Catch responses and errors with standard try/catch and async/await syntax.
@@ -15,7 +17,7 @@ This library provides support for TypeScript/JavaScript [One](https://www.one.to
 ## Example
 
 ```ts
-import Client, { Wallet } from '@one/api';
+import Client, { Wallet } from '@xone-network/api';
 import Websocket from 'ws';
 import sleep from 'sleep-promise';
 
@@ -30,18 +32,18 @@ import sleep from 'sleep-promise';
   const wallet = new Wallet(client);
 
   try {
-    // get list of available publick keys
+    // get list of available public keys
     const publicKeys = await wallet.getPublicKeys();
 
     // bind to sync changes
     const unsubscribeSyncChanges = wallet.onSyncChanged((syncData) => {
-      console.log('do something with synchronisation data');
+      console.log('do something with synchronization data');
     });
 
     // wait 5 minutes
     await sleep(1000 * 60 * 5);
 
-    // unubscribe from synchronisation changes
+    // unsubscribe from synchronization changes
     await unsubscribeSyncChanges();
 
     // wait 5 minutes
@@ -55,3 +57,7 @@ import sleep from 'sleep-promise';
   }
 })();
 ```
+
+## Development
+
+Please read and follow the main [README.md](https://github.com/xone-network/one-blockchain-gui) of this monorepo.

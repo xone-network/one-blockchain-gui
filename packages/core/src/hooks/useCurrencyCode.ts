@@ -1,4 +1,4 @@
-import { useGetNetworkInfoQuery } from '@one/api-react';
+import { useGetNetworkInfoQuery } from '@xone-network/api-react';
 
 export default function useCurrencyCode(): string | undefined {
   const { data: networkInfo, isLoading } = useGetNetworkInfoQuery();

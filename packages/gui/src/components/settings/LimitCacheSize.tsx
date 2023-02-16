@@ -1,34 +1,23 @@
-import React, { useEffect } from 'react';
+import { usePrefs } from '@xone-network/api-react';
+import { AlertDialog, ButtonLoading, Flex, Form, TextField, useOpenDialog } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
+import React, { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { useLocalStorage } from '@one/api-react';
-import {
-  AlertDialog,
-  ButtonLoading,
-  Flex,
-  Form,
-  TextField,
-  useOpenDialog,
-} from '@one/core';
 
 import { getCacheInstances, removeFromLocalStorage } from '../../util/utils';
-
 import { defaultCacheSizeLimit } from '../nfts/gallery/NFTGallery';
 
 type FormData = {
   cacheLimitSize: number;
 };
 
-const ipcRenderer = (window as any).ipcRenderer;
+const { ipcRenderer } = window as any;
 
 function LimitCacheSize(props: any) {
   const { forceUpdateCacheSize } = props;
   const openDialog = useOpenDialog();
 
-  const [cacheLimitSize, setCacheLimitSize] = useLocalStorage(
-    `cacheLimitSize`,
-    defaultCacheSizeLimit,
-  );
+  const [cacheLimitSize, setCacheLimitSize] = usePrefs(`cacheLimitSize`, defaultCacheSizeLimit);
 
   const methods = useForm<FormData>({
     defaultValues: {
@@ -36,20 +25,20 @@ function LimitCacheSize(props: any) {
     },
   });
 
-  function removeFromLocalStorageListener(_event, response: any) {
-    removeFromLocalStorage({ removedObjects: response?.removedEntries });
-    forceUpdateCacheSize();
-  }
+  const removeFromLocalStorageListener = useCallback(
+    (_event: any, response: any) => {
+      removeFromLocalStorage({ removedObjects: response?.removedEntries });
+      forceUpdateCacheSize();
+    },
+    [forceUpdateCacheSize]
+  );
 
   useEffect(() => {
     ipcRenderer.on('removedFromLocalStorage', removeFromLocalStorageListener);
     return () => {
-      ipcRenderer.removeListener(
-        'removedFromLocalStorage',
-        removeFromLocalStorageListener,
-      );
+      ipcRenderer.removeListener('removedFromLocalStorage', removeFromLocalStorageListener);
     };
-  }, []);
+  }, [removeFromLocalStorageListener]);
 
   const { isSubmitting } = methods.formState;
   const isLoading = isSubmitting;
@@ -72,7 +61,7 @@ function LimitCacheSize(props: any) {
     await openDialog(
       <AlertDialog>
         <Trans>Successfully updated cache size limit.</Trans>
-      </AlertDialog>,
+      </AlertDialog>
     );
   }
 

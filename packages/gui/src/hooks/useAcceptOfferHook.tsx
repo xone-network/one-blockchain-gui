@@ -1,25 +1,21 @@
-import React from 'react';
-import BigNumber from 'bignumber.js';
+import { OfferSummaryRecord } from '@xone-network/api';
+import { useTakeOfferMutation } from '@xone-network/api-react';
+import { AlertDialog, oneToMojo, useOpenDialog, useShowError } from '@xone-network/core';
 import { Trans, t } from '@lingui/macro';
-import { OfferSummaryRecord } from '@one/api';
-import { useTakeOfferMutation } from '@one/api-react';
-import {
-  AlertDialog,
-  oneToMojo,
-  useOpenDialog,
-  useShowError,
-} from '@one/core';
-import useAssetIdName from './useAssetIdName';
+import BigNumber from 'bignumber.js';
+import React from 'react';
+
 import OfferAcceptConfirmationDialog from '../components/offers/OfferAcceptConfirmationDialog';
 import OfferAsset from '../components/offers/OfferAsset';
 import { offerAssetTypeForAssetId } from '../components/offers/utils';
+import useAssetIdName from './useAssetIdName';
 
 export type AcceptOfferHook = (
   offerData: string,
   offerSummary: OfferSummaryRecord,
   fee: string | undefined,
   onUpdate: (accepting: boolean) => void,
-  onSuccess: () => void,
+  onSuccess: () => void
 ) => Promise<void>;
 
 export default function useAcceptOfferHook(): [AcceptOfferHook] {
@@ -32,45 +28,38 @@ export default function useAcceptOfferHook(): [AcceptOfferHook] {
     offerData: string,
     offerSummary: OfferSummaryRecord,
     fee: string | undefined,
-    onUpdate: (accepting: boolean) => void,
-    onSuccess: () => void,
+    onUpdate?: (accepting: boolean) => void,
+    onSuccess?: () => void
   ): Promise<void> {
     const feeInMojos: BigNumber = fee ? oneToMojo(fee) : new BigNumber(0);
     const offeredUnknownCATs: string[] = Object.entries(offerSummary.offered)
       .filter(
         ([assetId]) =>
-          offerAssetTypeForAssetId(assetId, offerSummary) !== OfferAsset.NFT &&
-          lookupByAssetId(assetId) === undefined,
+          offerAssetTypeForAssetId(assetId, offerSummary) !== OfferAsset.NFT && lookupByAssetId(assetId) === undefined
       )
       .map(([assetId]) => assetId);
 
-    const confirmedAccept = await openDialog(
-      <OfferAcceptConfirmationDialog offeredUnknownCATs={offeredUnknownCATs} />,
-    );
+    const confirmedAccept = await openDialog(<OfferAcceptConfirmationDialog offeredUnknownCATs={offeredUnknownCATs} />);
 
     if (!confirmedAccept) {
       return;
     }
     try {
-      onUpdate(true);
+      onUpdate?.(true);
 
       const response = await takeOffer({ offer: offerData, fee: feeInMojos });
 
       if (response.data?.success === true) {
         await openDialog(
           <AlertDialog title={<Trans>Success</Trans>}>
-            {response.message ?? (
-              <Trans>
-                Offer has been accepted and is awaiting confirmation.
-              </Trans>
-            )}
-          </AlertDialog>,
+            {response.message ?? <Trans>Offer has been accepted and is awaiting confirmation.</Trans>}
+          </AlertDialog>
         );
       } else {
         throw new Error(response.error?.message ?? 'Something went wrong');
       }
 
-      onSuccess();
+      onSuccess?.();
     } catch (e) {
       let error = e as Error;
 
@@ -82,7 +71,7 @@ export default function useAcceptOfferHook(): [AcceptOfferHook] {
       }
       showError(error);
     } finally {
-      onUpdate(false);
+      onUpdate?.(false);
     }
   }
 

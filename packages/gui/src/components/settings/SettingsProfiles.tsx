@@ -1,19 +1,20 @@
-import React, { useEffect, useMemo } from 'react';
+import { WalletType } from '@xone-network/api';
+import { useGetWalletsQuery } from '@xone-network/api-react';
+import { Flex, LayoutDashboardSub } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { IconButton, Typography } from '@mui/material';
-import { Flex } from '@one/core';
-import { Route, Routes, useNavigate } from 'react-router-dom';
-import IdentitiesPanel from './IdentitiesPanel';
-import { LayoutDashboardSub } from '@one/core';
-import ProfileView from './ProfileView';
-import ProfileAdd from './ProfileAdd';
 import { Add } from '@mui/icons-material';
-import { useGetWalletsQuery } from '@one/api-react';
-import { WalletType } from '@one/api';
+import { IconButton, Typography } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+
+import IdentitiesPanel from './IdentitiesPanel';
+import ProfileAdd from './ProfileAdd';
+import ProfileView from './ProfileView';
 
 export default function SettingsProfiles() {
   const navigate = useNavigate();
-  const { data: wallets } = useGetWalletsQuery();
+  const { data: wallets, isLoading } = useGetWalletsQuery();
+  const [profileStartDisplay, setProfileStartDisplay] = useState(true);
 
   const didList = useMemo(() => {
     const dids: number[] = [];
@@ -24,16 +25,23 @@ export default function SettingsProfiles() {
         }
       });
     }
+    setProfileStartDisplay(true);
     return dids;
   }, [wallets]);
 
   useEffect(() => {
-    if (didList.length) {
-      navigate(`/dashboard/settings/profiles/${didList[0]}`);
-    } else {
-      navigate(`/dashboard/settings/profiles/add`);
+    if (isLoading) {
+      return;
     }
-  }, [didList]);
+    if (profileStartDisplay) {
+      if (didList.length) {
+        navigate(`/dashboard/settings/profiles/${didList[0]}`);
+      } else {
+        navigate(`/dashboard/settings/profiles/add`);
+      }
+      setProfileStartDisplay(false);
+    }
+  }, [isLoading, profileStartDisplay, didList, navigate]);
 
   function navAdd() {
     navigate(`/dashboard/settings/profiles/add`);
@@ -54,9 +62,7 @@ export default function SettingsProfiles() {
         </Flex>
       </Flex>
       <Routes>
-        <Route
-          element={<LayoutDashboardSub sidebar={<IdentitiesPanel />} outlet />}
-        >
+        <Route element={<LayoutDashboardSub sidebar={<IdentitiesPanel />} outlet />}>
           <Route path=":walletId" element={<ProfileView />} />
           <Route path="add" element={<ProfileAdd />} />
         </Route>

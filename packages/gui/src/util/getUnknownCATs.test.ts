@@ -1,5 +1,6 @@
+import { WalletType } from '@xone-network/api';
+
 import getUnknownCATs from './getUnknownCATs';
-import { WalletType } from '@one/api';
 
 describe('getUnknownCATs', () => {
   describe('all assetIds found', () => {

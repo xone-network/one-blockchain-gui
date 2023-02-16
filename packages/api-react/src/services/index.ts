@@ -28,11 +28,13 @@ export const {
   useRemoveKeyringPassphraseMutation,
   useMigrateKeyringMutation,
   useUnlockKeyringMutation,
+  useGetVersionQuery,
 
   useGetPlottersQuery,
   useStopPlottingMutation,
   useStartPlottingMutation,
 
+  useAddPrivateKeyMutation,
   useGetKeyQuery,
   useGetKeysQuery,
   useSetLabelMutation,
@@ -97,7 +99,6 @@ export const {
   useSendTransactionMutation,
   useGenerateMnemonicMutation,
   useGetPublicKeysQuery,
-  useAddKeyMutation,
   useDeleteKeyMutation,
   useCheckDeleteKeyMutation,
   useDeleteAllKeysMutation,
@@ -113,6 +114,7 @@ export const {
   useGetCurrentAddressQuery,
   useGetNextAddressMutation,
   useFarmBlockMutation,
+  useGetTimestampForHeightQuery,
   useGetHeightInfoQuery,
   useGetNetworkInfoQuery,
   useGetSyncStatusQuery,
@@ -171,6 +173,15 @@ export const {
   useSetNFTDIDMutation,
   useSetNFTStatusMutation,
   useReceiveNFTMutation,
+
+  // sign
+  useSignMessageByAddressMutation,
+  useSignMessageByIdMutation,
+
+  // notifications
+  useGetNotificationsQuery,
+  useDeleteNotificationsMutation,
+  useSendNotificationsMutation,
 } = wallet;
 
 // harvester hooks

@@ -1,14 +1,9 @@
-import React from 'react';
+import { Connection, ServiceConnectionName } from '@xone-network/api';
+import { useGetWalletConnectionsQuery } from '@xone-network/api-react';
+import { Card, FormatBytes, Loading, Table } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import {
-  Card,
-  FormatBytes,
-  Loading,
-  Table,
-} from '@one/core';
 import { Tooltip } from '@mui/material';
-import { Connection, ServiceConnectionName } from '@one/api';
-import { useGetWalletConnectionsQuery } from '@one/api-react';
+import React from 'react';
 
 const cols = [
   {
@@ -36,19 +31,9 @@ const cols = [
     field(row: Connection) {
       return (
         <>
-          <FormatBytes
-            value={row.bytesWritten}
-            unit="MiB"
-            removeUnit
-            fixedDecimals
-          />
+          <FormatBytes value={row.bytesWritten} unit="MiB" removeUnit fixedDecimals />
           /
-          <FormatBytes
-            value={row.bytesRead}
-            unit="MiB"
-            removeUnit
-            fixedDecimals
-          />
+          <FormatBytes value={row.bytesRead} unit="MiB" removeUnit fixedDecimals />
         </>
       );
     },
@@ -69,16 +54,17 @@ export type WalletConnectionsProps = {
 
 export default function WalletConnections(props: WalletConnectionsProps) {
   const { walletId } = props;
-  const { data: connections, isLoading } = useGetWalletConnectionsQuery({
-    walletId,
-  }, {
-    pollingInterval: 10000,
-  });
+  const { data: connections, isLoading } = useGetWalletConnectionsQuery(
+    {
+      walletId,
+    },
+    {
+      pollingInterval: 10_000,
+    }
+  );
 
   return (
-    <Card
-      title={<Trans>Wallet Connections</Trans>}
-    >
+    <Card title={<Trans>Wallet Connections</Trans>}>
       {isLoading ? (
         <Loading center />
       ) : !connections?.length ? (

@@ -1,18 +1,17 @@
-import { mojoToCAT, mojoToOne } from '@one/core';
+import { mojoToCAT, mojoToOne } from '@xone-network/core';
 import BigNumber from 'bignumber.js';
+
 import type OfferBuilderData from '../@types/OfferBuilderData';
 import type OfferSummary from '../@types/OfferSummary';
-import { launcherIdToNFTId } from '../util/nfts';
+import { launcherIdToNFTId } from './nfts';
 
-export default function offerToOfferBuilderData(
-  offerSummary: OfferSummary,
-): OfferBuilderData {
+export default function offerToOfferBuilderData(offerSummary: OfferSummary): OfferBuilderData {
   const { fees, offered, requested, infos } = offerSummary;
 
-  const offeredXch: OfferBuilderData['offered']['xone'] = [];
+  const offeredXone: OfferBuilderData['offered']['xone'] = [];
   const offeredTokens: OfferBuilderData['offered']['tokens'] = [];
   const offeredNfts: OfferBuilderData['offered']['nfts'] = [];
-  const requestedXch: OfferBuilderData['requested']['xone'] = [];
+  const requestedXone: OfferBuilderData['requested']['xone'] = [];
   const requestedTokens: OfferBuilderData['requested']['tokens'] = [];
   const requestedNfts: OfferBuilderData['requested']['nfts'] = [];
 
@@ -32,7 +31,7 @@ export default function offerToOfferBuilderData(
         nftId: launcherIdToNFTId(info.launcherId),
       });
     } else if (id === 'xone') {
-      offeredXch.push({
+      offeredXone.push({
         amount: mojoToOne(amount).toFixed(),
       });
     }
@@ -52,7 +51,7 @@ export default function offerToOfferBuilderData(
         nftId: launcherIdToNFTId(info.launcherId),
       });
     } else if (id === 'xone') {
-      requestedXch.push({
+      requestedXone.push({
         amount: mojoToOne(amount).toFixed(),
       });
     }
@@ -60,13 +59,13 @@ export default function offerToOfferBuilderData(
 
   return {
     offered: {
-      xone: offeredXch,
+      xone: offeredXone,
       tokens: offeredTokens,
       nfts: offeredNfts,
       fee: [],
     },
     requested: {
-      xone: requestedXch,
+      xone: requestedXone,
       tokens: requestedTokens,
       nfts: requestedNfts,
       fee: [

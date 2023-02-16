@@ -1,9 +1,10 @@
 import EventEmitter from 'events';
+
 import { isUndefined, omitBy } from 'lodash';
+
 import type Client from '../Client';
-import ServiceName from '../constants/ServiceName';
 import Message from '../Message';
-import sleep from '../utils/sleep';
+import ServiceName from '../constants/ServiceName';
 
 export type Options = {
   origin?: ServiceName;
@@ -11,24 +12,22 @@ export type Options = {
 };
 
 export default class Service extends EventEmitter {
-  private _client: Client;
-  private _name: ServiceName;
-  private _origin: ServiceName;
-  private _readyPromise: Promise<null> | undefined;
+  readonly client: Client;
 
-  constructor(
-    name: ServiceName,
-    client: Client,
-    options: Options = {},
-    onInit?: () => Promise<void>,
-  ) {
+  readonly name: ServiceName;
+
+  readonly origin: ServiceName;
+
+  #readyPromise: Promise<null> | undefined;
+
+  constructor(name: ServiceName, client: Client, options: Options = {}, onInit?: () => Promise<void>) {
     super();
 
     const { origin, skipAddService } = options;
 
-    this._client = client;
-    this._name = name;
-    this._origin = origin ?? client.origin;
+    this.client = client;
+    this.name = name;
+    this.origin = origin ?? client.origin;
 
     if (!skipAddService) {
       client.addService(this);
@@ -36,7 +35,7 @@ export default class Service extends EventEmitter {
 
     client.on('message', this.handleMessage);
 
-    this._readyPromise = new Promise(async (resolve, reject) => {
+    this.#readyPromise = new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
           if (onInit) {
@@ -52,26 +51,15 @@ export default class Service extends EventEmitter {
   }
 
   async whenReady(callback?: () => Promise<any>) {
-    await this._readyPromise;
+    await this.#readyPromise;
     if (callback) {
       return callback();
     }
-  }
-
-  get name() {
-    return this._name;
-  }
-
-  get client() {
-    return this._client;
-  }
-
-  get origin() {
-    return this._origin;
+    return undefined;
   }
 
   register() {
-    return this._client.registerService(this.name);
+    return this.client.registerService(this.name);
   }
 
   handleMessage = (message: Message) => {
@@ -88,13 +76,13 @@ export default class Service extends EventEmitter {
     }
   }
 
-  async command(
+  async command<Response>(
     command: string,
     data: Object = {},
     ack = false,
     timeout?: number,
     disableFormat?: boolean
-  ): Promise<any> {
+  ): Promise<Response> {
     const { client, origin, name } = this;
 
     if (!command) {
@@ -142,11 +130,7 @@ export default class Service extends EventEmitter {
     };
   }
 
-  onStateChanged(
-    state: string,
-    callback: (data: any, message: Message) => void,
-    processData?: (data: any) => any
-  ) {
+  onStateChanged(state: string, callback: (data: any, message: Message) => void, processData?: (data: any) => any) {
     return this.onCommand(
       'state_changed',
       (data, message) => {

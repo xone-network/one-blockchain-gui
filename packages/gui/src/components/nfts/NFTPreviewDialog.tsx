@@ -1,9 +1,10 @@
-import React from 'react';
-import { Flex } from '@one/core';
-import { type NFTInfo } from '@one/api';
+import { type NFTInfo } from '@xone-network/api';
+import { Flex } from '@xone-network/core';
 import { Dialog, Paper } from '@mui/material';
-import NFTPreview from './NFTPreview';
 import { styled } from '@mui/styles';
+import React from 'react';
+
+import NFTPreview from './NFTPreview';
 
 const StyledNFTPreviewBackground = styled(Paper)({
   padding: '2rem',
@@ -22,6 +23,7 @@ export default function NFTPreviewDialog(props: NFTPreviewDialogProps) {
     <Dialog
       open={open}
       onClose={onClose}
+      // eslint-disable-next-line react/no-unstable-nested-components -- Not a performance issue
       PaperComponent={({ children }) => (
         <Flex
           width="95vw"
@@ -36,14 +38,7 @@ export default function NFTPreviewDialog(props: NFTPreviewDialogProps) {
       )}
       {...rest}
     >
-      <NFTPreview
-        nft={nft}
-        width="100%"
-        height="100%"
-        fit="contain"
-        background={StyledNFTPreviewBackground}
-        hideStatusBar={true}
-      />
+      <NFTPreview nft={nft} width="100%" height="100%" background={StyledNFTPreviewBackground} hideStatusBar />
     </Dialog>
   );
 }

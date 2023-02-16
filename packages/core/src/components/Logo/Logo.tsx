@@ -1,7 +1,7 @@
+import { One } from '@xone-network/icons';
+import { Box, BoxProps } from '@mui/material';
 import React from 'react';
 import styled from 'styled-components';
-import { Box, BoxProps } from '@mui/material';
-import { One } from '@one/icons';
 
 const StyledOne = styled(One)`
   max-width: 100%;

@@ -1,34 +1,29 @@
-import React, { useState, useEffect, ReactNode, useMemo } from 'react';
-import isElectron from 'is-electron';
-import { Trans } from '@lingui/macro';
-import {
-  ConnectionState,
-  ServiceHumanName,
-  ServiceName,
-  PassphrasePromptReason,
-} from '@one/api';
+import { IpcRenderer } from 'electron';
+
+import { ConnectionState, ServiceHumanName, ServiceName, PassphrasePromptReason } from '@xone-network/api';
 import {
   useCloseMutation,
   useGetStateQuery,
   useGetKeyringStatusQuery,
   useServices,
-} from '@one/api-react';
-import {
-  Flex,
-  LayoutHero,
-  LayoutLoading,
-  useMode,
-  useIsSimulator,
-} from '@one/core';
+  useGetVersionQuery,
+} from '@xone-network/api-react';
+import { Flex, LayoutHero, LayoutLoading, useMode, useIsSimulator, useAppVersion } from '@xone-network/core';
+import { Trans } from '@lingui/macro';
 import { Typography, Collapse } from '@mui/material';
+import isElectron from 'is-electron';
+import React, { useState, useEffect, ReactNode, useMemo } from 'react';
+
+import ModeServices, { SimulatorServices } from '../../constants/ModeServices';
+import useEnableDataLayerService from '../../hooks/useEnableDataLayerService';
+import useEnableFilePropagationServer from '../../hooks/useEnableFilePropagationServer';
+import useNFTMetadataLRU from '../../hooks/useNFTMetadataLRU';
+import NFTContextualActionsEventEmitter from '../nfts/NFTContextualActionsEventEmitter';
+import AppAutoLogin from './AppAutoLogin';
 import AppKeyringMigrator from './AppKeyringMigrator';
 import AppPassPrompt from './AppPassPrompt';
 import AppSelectMode from './AppSelectMode';
-import ModeServices, { SimulatorServices } from '../../constants/ModeServices';
-import useEnableDataLayerService from '../../hooks/useEnableDataLayerService';
-import { IpcRenderer } from 'electron';
-import useEnableFilePropagationServer from '../../hooks/useEnableFilePropagationServer';
-import AppAutoLogin from './AppAutoLogin';
+import AppVersionWarning from './AppVersionWarning';
 
 const ALL_SERVICES = [
   ServiceName.WALLET,
@@ -48,25 +43,23 @@ export default function AppState(props: Props) {
   const { children } = props;
   const [close] = useCloseMutation();
   const [closing, setClosing] = useState<boolean>(false);
-  const { data: clientState = {}, isLoading: isClientStateLoading } =
-    useGetStateQuery();
-  const { data: keyringStatus, isLoading: isLoadingKeyringStatus } =
-    useGetKeyringStatusQuery();
+  const { data: clientState = {}, isLoading: isClientStateLoading } = useGetStateQuery();
+  const { data: keyringStatus, isLoading: isLoadingKeyringStatus } = useGetKeyringStatusQuery();
   const [mode] = useMode();
   const isSimulator = useIsSimulator();
   const [enableDataLayerService] = useEnableDataLayerService();
   const [enableFilePropagationServer] = useEnableFilePropagationServer();
   // NOTE: We only start the DL at launch time for now
   const [isDataLayerEnabled] = useState(enableDataLayerService);
-  const [isFilePropagationServerEnabled] = useState(
-    enableFilePropagationServer,
-  );
+  const [isFilePropagationServerEnabled] = useState(enableFilePropagationServer);
+  const [versionDialog, setVersionDialog] = useState<boolean>(true);
+  const { data: backendVersion } = useGetVersionQuery();
+  const { version } = useAppVersion();
+  const lru = useNFTMetadataLRU();
 
   const runServices = useMemo<ServiceName[] | undefined>(() => {
     if (mode) {
-      const services: ServiceName[] = isSimulator
-        ? SimulatorServices
-        : ModeServices[mode];
+      const services: ServiceName[] = isSimulator ? SimulatorServices : ModeServices[mode];
 
       if (isDataLayerEnabled) {
         if (!services.includes(ServiceName.DATALAYER)) {
@@ -74,10 +67,7 @@ export default function AppState(props: Props) {
         }
 
         // File propagation server is dependent on the datalayer
-        if (
-          isFilePropagationServerEnabled &&
-          !services.includes(ServiceName.DATALAYER_SERVER)
-        ) {
+        if (isFilePropagationServerEnabled && !services.includes(ServiceName.DATALAYER_SERVER)) {
           services.push(ServiceName.DATALAYER_SERVER);
         }
       }
@@ -100,47 +90,53 @@ export default function AppState(props: Props) {
       return false;
     }
 
-    const specificRunningServiceStates = servicesState.running.filter(
-      (serviceState) => runServices.includes(serviceState.service),
+    const specificRunningServiceStates = servicesState.running.filter((serviceState) =>
+      runServices.includes(serviceState.service)
     );
 
     return specificRunningServiceStates.length === runServices.length;
   }, [servicesState, runServices]);
 
-  const isConnected =
-    !isClientStateLoading && clientState?.state === ConnectionState.CONNECTED;
-
-  async function handleOpenFile(event, path: string) {
-    console.log('Opening file:');
-    console.log(path);
-  }
-
-  async function handleOpenUrl(event, url: string) {
-    console.log('Opening url:');
-    console.log(url);
-  }
-
-  async function handleClose(event) {
-    if (closing) {
-      return;
-    }
-
-    setClosing(true);
-
-    await close({
-      force: true,
-    }).unwrap();
-
-    event.sender.send('daemon-exited');
-  }
+  const isConnected = !isClientStateLoading && clientState?.state === ConnectionState.CONNECTED;
 
   useEffect(() => {
-    if (isElectron()) {
-      const ipcRenderer: IpcRenderer = (window as any).ipcRenderer;
+    async function handleClose(event) {
+      if (closing) {
+        return;
+      }
 
-      ipcRenderer.on('open-file', handleOpenFile);
-      ipcRenderer.on('open-url', handleOpenUrl);
+      setClosing(true);
+
+      await close({
+        force: true,
+      }).unwrap();
+
+      event.sender.send('daemon-exited');
+    }
+
+    function handleRemovedCachedFile(e: any, hash: string) {
+      Object.keys({ ...localStorage }).forEach((key: string) => {
+        try {
+          const json = JSON.parse(localStorage.getItem(key)!);
+          if (json.binary === hash || json.video === hash || json.image === hash) {
+            localStorage.removeItem(key);
+            const nftId = key.replace('thumb-cache-', '').replace('metadata-cache-', '').replace('content-cache-', '');
+            NFTContextualActionsEventEmitter.emit(`force-reload-metadata-${nftId}`);
+            if (lru.get(nftId)) {
+              lru.delete(nftId);
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    if (isElectron()) {
+      const { ipcRenderer } = window as unknown as { ipcRenderer: IpcRenderer };
+
       ipcRenderer.on('exit-daemon', handleClose);
+      ipcRenderer.on('removed-cache-file', handleRemovedCachedFile);
 
       // Handle files/URLs opened at launch now that the app is ready
       ipcRenderer.invoke('processLaunchTasks');
@@ -150,7 +146,8 @@ export default function AppState(props: Props) {
         ipcRenderer.off('exit-daemon', handleClose);
       };
     }
-  }, []);
+    return undefined;
+  }, [close, closing, lru]);
 
   if (closing) {
     return (
@@ -160,19 +157,9 @@ export default function AppState(props: Props) {
             <Trans>Closing down services</Trans>
           </Typography>
           <Flex flexDirection="column" gap={0.5}>
-            {ALL_SERVICES.filter(
-              (service) => !!clientState?.startedServices.includes(service),
-            ).map((service) => (
-              <Collapse
-                key={service}
-                in={true}
-                timeout={{ enter: 0, exit: 1000 }}
-              >
-                <Typography
-                  variant="body1"
-                  color="textSecondary"
-                  align="center"
-                >
+            {ALL_SERVICES.filter((service) => !!clientState?.startedServices.includes(service)).map((service) => (
+              <Collapse key={service} in timeout={{ enter: 0, exit: 1000 }}>
+                <Typography variant="body1" color="textSecondary" align="center">
                   {ServiceHumanName[service]}
                 </Typography>
               </Collapse>
@@ -181,6 +168,22 @@ export default function AppState(props: Props) {
         </Flex>
       </LayoutLoading>
     );
+  }
+
+  if (backendVersion && version && versionDialog === true) {
+    // backendVersion can be in the format of 1.6.1, 1.7.0b3, or 1.7.0b3.dev123
+    // version can be in the format of 1.6.1, 1.7.0b3, 1.7.0-b2.dev123, or 1.7.0b3-dev123
+
+    const backendVersionClean = backendVersion.replace(/[-+.]/g, '');
+    const guiVersionClean = version.replace(/[-+.]/g, '');
+
+    if (backendVersionClean !== guiVersionClean) {
+      return (
+        <LayoutHero>
+          <AppVersionWarning backV={backendVersion} guiV={version} setVersionDialog={setVersionDialog} />
+        </LayoutHero>
+      );
+    }
   }
 
   if (isLoadingKeyringStatus || !keyringStatus) {
@@ -252,18 +255,10 @@ export default function AppState(props: Props) {
               runServices.map((service) => (
                 <Collapse
                   key={service}
-                  in={
-                    !servicesState.running.find(
-                      (state) => state.service === service,
-                    )
-                  }
+                  in={!servicesState.running.find((state) => state.service === service)}
                   timeout={{ enter: 0, exit: 1000 }}
                 >
-                  <Typography
-                    variant="body1"
-                    color="textSecondary"
-                    align="center"
-                  >
+                  <Typography variant="body1" color="textSecondary" align="center">
                     {ServiceHumanName[service]}
                   </Typography>
                 </Collapse>

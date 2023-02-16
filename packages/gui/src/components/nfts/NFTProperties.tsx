@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import type { NFTAttribute } from '@one/api';
+import type { NFTAttribute } from '@xone-network/api';
+import { CopyToClipboard, Flex, Tooltip } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { CopyToClipboard, Flex, Tooltip } from '@one/core';
 import { Box, Grid, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import isRankingAttribute from '../../util/isRankingAttribute';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
+
+import isRankingAttribute from '../../util/isRankingAttribute';
 
 /* ========================================================================== */
 
@@ -33,7 +34,12 @@ export type NFTPropertiesProps = {
 export function NFTProperty(props: NFTPropertyProps) {
   const { attribute, size = 'regular', color = 'secondary' } = props;
   const theme = useTheme();
-  const { name, trait_type, value } = attribute;
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- Comes from API like this
+  const { name, trait_type, value: rawValue } = attribute;
+  if (typeof rawValue === 'object') {
+    return null;
+  }
+  const value = rawValue.toString();
   const title = trait_type ?? name;
   const borderStyle = {
     border: 1,
@@ -45,11 +51,7 @@ export function NFTProperty(props: NFTPropertyProps) {
   return (
     <Grid xs={12} sm={6} item>
       <Box {...borderStyle}>
-        <Typography
-          variant={size === 'small' ? 'caption' : 'body1'}
-          color={color}
-          noWrap
-        >
+        <Typography variant={size === 'small' ? 'caption' : 'body1'} color={color} noWrap>
           {title}
         </Typography>
         {/* <Tooltip title={value} copyToClipboard={true}> */}
@@ -70,11 +72,7 @@ export function NFTProperty(props: NFTPropertyProps) {
             </Flex>
           }
         >
-          <Typography
-            variant={size === 'small' ? 'body2' : 'h6'}
-            color={color}
-            noWrap
-          >
+          <Typography variant={size === 'small' ? 'body2' : 'h6'} color={color} noWrap>
             {value}
           </Typography>
         </Tooltip>
@@ -103,8 +101,8 @@ export default function NFTProperties(props: NFTPropertiesProps) {
         <Trans>Properties</Trans>
       </Typography>
       <Grid spacing={2} container>
-        {valueAttributes.map((attribute, index) => (
-          <React.Fragment key={`${attribute?.name}-${index}`}>
+        {valueAttributes.map((attribute) => (
+          <React.Fragment key={JSON.stringify(attribute)}>
             <NFTProperty attribute={attribute} />
           </React.Fragment>
         ))}

@@ -5,7 +5,7 @@ enum ServiceName {
   HARVESTER = 'one_harvester',
   SIMULATOR = 'one_full_node_simulator',
   DAEMON = 'daemon',
-  PLOTTER = 'one_plotter',
+  PLOTTER = 'chia_plotter',
   TIMELORD = 'one_timelord',
   INTRODUCER = 'one_introducer',
   EVENTS = 'wallet_ui',

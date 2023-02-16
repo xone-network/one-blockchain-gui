@@ -12,17 +12,24 @@ export type RemoteFileContent = {
   nftId?: string;
   type?: FileType;
   dataHash?: string;
+  timeout?: number;
 };
 
-export default async function getRemoteFileContent(
-  props: RemoteFileContent,
-): Promise<{
+type FetchBinaryResponseType = {
+  dataObject: any;
+  statusCode: number;
+  encoding: string;
+  error: string;
+  wasCached: boolean;
+};
+
+export default function getRemoteFileContent(props: RemoteFileContent): Promise<{
   data: string;
   encoding: string;
   wasCached: boolean;
   isValid: boolean;
 }> {
-  const ipcRenderer = (window as any).ipcRenderer;
+  const { ipcRenderer } = window as any;
   const requestOptions = {
     url: props.uri,
     maxSize: props.maxSize,
@@ -32,21 +39,42 @@ export default async function getRemoteFileContent(
     dataHash: props.dataHash,
   };
 
-  const { dataObject, statusCode, encoding, error, wasCached } =
-    await ipcRenderer?.invoke('fetchBinaryContent', requestOptions);
+  let done: boolean = false;
 
-  if (error) {
-    throw error;
-  }
+  const failedToFetchContent: string = `Failed to fetch content from ${requestOptions.url}`;
 
-  if (statusCode !== 200) {
-    throw new Error(error?.message || `Failed to fetch content from ${url}`);
-  }
+  return new Promise((resolve, reject) => {
+    ipcRenderer?.invoke('fetchBinaryContent', requestOptions).then((response: FetchBinaryResponseType) => {
+      if (typeof response === 'object') {
+        const { dataObject, statusCode, encoding, error, wasCached } = response;
+        if (props.timeout) {
+          setTimeout(() => {
+            if (!error || !dataObject) {
+              console.warn('Reject.....', requestOptions.url);
+              reject(failedToFetchContent);
+              done = true;
+            }
+          }, props.timeout);
+        }
+        if (error) {
+          reject(error);
+        }
 
-  return {
-    data: dataObject.content,
-    isValid: dataObject.isValid,
-    encoding,
-    wasCached,
-  };
+        if (statusCode !== 200) {
+          reject(failedToFetchContent);
+        }
+        if (!done) {
+          resolve({
+            data: dataObject.content,
+            isValid: dataObject.isValid,
+            encoding,
+            wasCached,
+          });
+          done = true;
+        }
+      } else {
+        reject(new Error('Fetch binary content error'));
+      }
+    });
+  });
 }

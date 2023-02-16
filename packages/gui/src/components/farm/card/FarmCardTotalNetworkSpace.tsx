@@ -1,7 +1,7 @@
-import React from 'react';
+import { useGetBlockchainStateQuery } from '@xone-network/api-react';
+import { FormatBytes, CardSimple } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { FormatBytes, CardSimple } from '@one/core';
-import { useGetBlockchainStateQuery } from '@one/api-react';
+import React from 'react';
 
 export default function FarmCardTotalNetworkSpace() {
   const { data, isLoading, error } = useGetBlockchainStateQuery();

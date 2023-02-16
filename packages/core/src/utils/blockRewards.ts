@@ -33,11 +33,9 @@ function calculateReward(height: number, index = 0): number {
       return 10
     } else {
       const [_reward, _height] = _REWARD_PER[index]
-      if (height < _height){  return _reward }
-      else{ return calculateReward(height, ++index)}
+      return height < _height ? _reward : calculateReward(height, ++index);
     }
 }
-
 
 export function calculatePoolReward(height: number): BigNumber {
   return MOJO_PER_ONE.times(calculateReward(height)).times(POOL_REWARD);
@@ -51,6 +49,7 @@ export function calculateCommunityReward(height: number): BigNumber {
   return MOJO_PER_ONE.times(calculateReward(height)).times(COMMUNITY_REWARD);
 }
 
-export function calculateTimelordReward(height: number): BigNumber {
+export function calculateTimelordFee(height: number): BigNumber {
   return MOJO_PER_ONE.times(calculateReward(height)).times(TIMELORD_FEE);
 }
+

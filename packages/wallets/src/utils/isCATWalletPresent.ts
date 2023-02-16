@@ -1,5 +1,5 @@
-import type { Wallet, CATToken } from '@one/api';
-import { WalletType } from '@one/api';
+import type { Wallet, CATToken } from '@xone-network/api';
+import { WalletType } from '@xone-network/api';
 
 export default function isCATWalletPresent(wallets: Wallet[], token: CATToken): boolean {
   return !!wallets?.find((wallet) => {

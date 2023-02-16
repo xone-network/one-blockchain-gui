@@ -1,20 +1,18 @@
-import { uniq } from 'lodash';
-import React, { ReactNode, useMemo } from 'react';
-import { useWatch } from 'react-hook-form';
-import {
-  fungibleAssetFromAssetIdAndAmount,
-  royaltyAssetFromNFTInfo,
-} from '@one/api';
-import type { CalculateRoyaltiesRequest, NFTInfo } from '@one/api';
+import { fungibleAssetFromAssetIdAndAmount, royaltyAssetFromNFTInfo } from '@xone-network/api';
+import type { CalculateRoyaltiesRequest, NFTInfo } from '@xone-network/api';
 import {
   useCalculateRoyaltiesForNFTsQuery,
   useGetNFTsByNFTIDsQuery,
   useGetWalletsQuery,
-} from '@one/api-react';
-import { catToMojo, oneToMojo } from '@one/core';
-import OfferBuilderContext from './OfferBuilderContext';
+} from '@xone-network/api-react';
+import { catToMojo, oneToMojo } from '@xone-network/core';
+import { uniq } from 'lodash';
+import React, { ReactNode, useMemo } from 'react';
+import { useWatch } from 'react-hook-form';
+
 import getUnknownCATs from '../../util/getUnknownCATs';
 import OfferState from '../offers/OfferState';
+import OfferBuilderContext from './OfferBuilderContext';
 
 export type OfferBuilderProviderProps = {
   children: ReactNode;
@@ -25,13 +23,7 @@ export type OfferBuilderProviderProps = {
 };
 
 export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
-  const {
-    children,
-    readOnly = false,
-    isMyOffer = false,
-    imported = false,
-    state,
-  } = props;
+  const { children, readOnly = false, isMyOffer = false, imported = false, state } = props;
 
   const requestedNFTIds = useWatch({
     name: 'requested.nfts',
@@ -64,26 +56,26 @@ export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
       return [];
     }
 
-    const offeredUnknownCATs = getUnknownCATs(
+    const offeredUnknownCATsLocal = getUnknownCATs(
       wallets,
-      offeredTokens.map(({ assetId }) => assetId),
+      offeredTokens.map(({ assetId }) => assetId)
     );
-    const requestedUnknownCATs = getUnknownCATs(
+    const requestedUnknownCATsLocal = getUnknownCATs(
       wallets,
-      requestedTokens.map(({ assetId }) => assetId),
+      requestedTokens.map(({ assetId }) => assetId)
     );
 
-    return [offeredUnknownCATs, requestedUnknownCATs];
+    return [offeredUnknownCATsLocal, requestedUnknownCATsLocal];
   }, [offeredTokens, requestedTokens, wallets]);
 
   const { data: requestedNFTs } = useGetNFTsByNFTIDsQuery(
     { nftIds: requestedNFTIds },
-    { skip: requestedNFTIds.length === 0 },
+    { skip: requestedNFTIds.length === 0 }
   );
 
   const { data: offeredNFTs } = useGetNFTsByNFTIDsQuery(
     { nftIds: offeredNFTIds },
-    { skip: offeredNFTIds.length === 0 },
+    { skip: offeredNFTIds.length === 0 }
   );
 
   const requestedRoyaltyAssets = (requestedNFTs || [])
@@ -97,27 +89,19 @@ export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
   const requestedFungibleAssets = [
     ...(requestedXONE ?? [])
       .filter(({ amount }) => amount > 0)
-      .map(({ amount }) =>
-        fungibleAssetFromAssetIdAndAmount('xone', oneToMojo(amount)),
-      ),
+      .map(({ amount }) => fungibleAssetFromAssetIdAndAmount('xone', oneToMojo(amount))),
     ...(requestedTokens ?? [])
       .filter(({ assetId, amount }) => assetId?.length > 0 && amount > 0)
-      .map(({ amount, assetId }) =>
-        fungibleAssetFromAssetIdAndAmount(assetId, catToMojo(amount)),
-      ),
+      .map(({ amount, assetId }) => fungibleAssetFromAssetIdAndAmount(assetId, catToMojo(amount))),
   ];
 
   const offeredFungibleAssets = [
     ...(offeredXONE ?? [])
       .filter(({ amount }) => amount > 0)
-      .map(({ amount }) =>
-        fungibleAssetFromAssetIdAndAmount('xone', oneToMojo(amount)),
-      ),
+      .map(({ amount }) => fungibleAssetFromAssetIdAndAmount('xone', oneToMojo(amount))),
     ...(offeredTokens ?? [])
       .filter(({ assetId, amount }) => assetId?.length > 0 && amount > 0)
-      .map(({ amount, assetId }) =>
-        fungibleAssetFromAssetIdAndAmount(assetId, catToMojo(amount)),
-      ),
+      .map(({ amount, assetId }) => fungibleAssetFromAssetIdAndAmount(assetId, catToMojo(amount))),
   ];
 
   const requestedRoyaltiesRequest: CalculateRoyaltiesRequest = {
@@ -131,34 +115,26 @@ export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
   };
 
   const skipRequestedRoyalitiesCalculation =
-    requestedRoyaltiesRequest.royaltyAssets.length === 0 ||
-    requestedRoyaltiesRequest.fungibleAssets.length === 0;
+    requestedRoyaltiesRequest.royaltyAssets.length === 0 || requestedRoyaltiesRequest.fungibleAssets.length === 0;
 
   const skipOfferedRoyalitiesCalculation =
-    offeredRoyaltiesRequest.royaltyAssets.length === 0 ||
-    offeredRoyaltiesRequest.fungibleAssets.length === 0;
+    offeredRoyaltiesRequest.royaltyAssets.length === 0 || offeredRoyaltiesRequest.fungibleAssets.length === 0;
 
-  const {
-    data: requestedRoyaltiesData,
-    isLoading: isCalculatingRequestedRoyalties,
-  } = useCalculateRoyaltiesForNFTsQuery(requestedRoyaltiesRequest, {
-    skip: skipRequestedRoyalitiesCalculation,
-  });
+  const { data: requestedRoyaltiesData, isLoading: isCalculatingRequestedRoyalties } =
+    useCalculateRoyaltiesForNFTsQuery(requestedRoyaltiesRequest, {
+      skip: skipRequestedRoyalitiesCalculation,
+    });
 
-  const {
-    data: offeredRoyaltiesData,
-    isLoading: isCalculatingOfferedRoyalties,
-  } = useCalculateRoyaltiesForNFTsQuery(offeredRoyaltiesRequest, {
-    skip: skipOfferedRoyalitiesCalculation,
-  });
+  const { data: offeredRoyaltiesData, isLoading: isCalculatingOfferedRoyalties } = useCalculateRoyaltiesForNFTsQuery(
+    offeredRoyaltiesRequest,
+    {
+      skip: skipOfferedRoyalitiesCalculation,
+    }
+  );
 
-  const requestedRoyalties = skipRequestedRoyalitiesCalculation
-    ? undefined
-    : requestedRoyaltiesData?.royalties;
+  const requestedRoyalties = skipRequestedRoyalitiesCalculation ? undefined : requestedRoyaltiesData?.royalties;
 
-  const offeredRoyalties = skipOfferedRoyalitiesCalculation
-    ? undefined
-    : offeredRoyaltiesData?.royalties;
+  const offeredRoyalties = skipOfferedRoyalitiesCalculation ? undefined : offeredRoyaltiesData?.royalties;
 
   const usedAssetIds = useMemo(() => {
     const used: string[] = [];
@@ -188,8 +164,7 @@ export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
       usedAssetIds,
       requestedRoyalties,
       offeredRoyalties,
-      isCalculatingRoyalties:
-        isCalculatingRequestedRoyalties || isCalculatingOfferedRoyalties,
+      isCalculatingRoyalties: isCalculatingRequestedRoyalties || isCalculatingOfferedRoyalties,
     }),
     [
       readOnly,
@@ -203,12 +178,8 @@ export default function OfferBuilderProvider(props: OfferBuilderProviderProps) {
       offeredRoyalties,
       isCalculatingRequestedRoyalties,
       isCalculatingOfferedRoyalties,
-    ],
+    ]
   );
 
-  return (
-    <OfferBuilderContext.Provider value={context}>
-      {children}
-    </OfferBuilderContext.Provider>
-  );
+  return <OfferBuilderContext.Provider value={context}>{children}</OfferBuilderContext.Provider>;
 }

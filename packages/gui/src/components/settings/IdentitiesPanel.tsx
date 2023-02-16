@@ -1,12 +1,12 @@
+import { WalletType } from '@xone-network/api';
+import { useGetDIDQuery, useGetWalletsQuery } from '@xone-network/api-react';
+import { CardListItem, Flex, Truncate } from '@xone-network/core';
+import { Box, Card, CardContent, Typography } from '@mui/material';
+import { orderBy } from 'lodash';
 import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { CardListItem, Flex, Truncate } from '@one/core';
-import { Box, Card, CardContent, Typography } from '@mui/material';
 import styled from 'styled-components';
-import { orderBy } from 'lodash';
 
-import { useGetDIDQuery, useGetWalletsQuery } from '@one/api-react';
-import { WalletType } from '@one/api';
 import { didToDIDId } from '../../util/dids';
 
 const StyledRoot = styled(Box)`
@@ -44,17 +44,17 @@ const StyledCard = styled(Card)(
   border: 1px dashed ${theme.palette.divider};
   background-color: ${theme.palette.background.paper};
   margin-bottom: ${theme.spacing(1)};
-`,
+`
 );
 
 const StyledCardContent = styled(CardContent)(
   ({ theme }) => `
   padding-bottom: ${theme.spacing(2)} !important;
-`,
+`
 );
 
 function DisplayDid(wallet) {
-  const id = wallet.wallet.id;
+  const { id } = wallet.wallet;
   const { data: did } = useGetDIDQuery({ walletId: id });
 
   if (did) {
@@ -67,19 +67,14 @@ function DisplayDid(wallet) {
         </Truncate>
       </div>
     );
-  } else {
-    return null;
   }
+  return null;
 }
 
 export default function IdentitiesPanel() {
   const navigate = useNavigate();
   const { walletId } = useParams();
   const { data: wallets, isLoading } = useGetWalletsQuery();
-
-  function handleSelectWallet(walletId: number) {
-    navigate(`/dashboard/settings/profiles/${walletId}`);
-  }
 
   const dids = [];
   if (wallets) {
@@ -94,10 +89,12 @@ export default function IdentitiesPanel() {
     if (isLoading) {
       return [];
     }
-
+    function handleSelectWallet(id: number) {
+      navigate(`/dashboard/settings/profiles/${id}`);
+    }
     const didLength = dids.length;
 
-    if (didLength == 0) {
+    if (didLength === 0) {
       return (
         <StyledCard variant="outlined">
           <StyledCardContent>
@@ -107,39 +104,34 @@ export default function IdentitiesPanel() {
           </StyledCardContent>
         </StyledCard>
       );
-    } else {
-      const orderedProfiles = orderBy(wallets, ['id'], ['asc']);
-
-      return orderedProfiles
-        .filter((wallet) => [WalletType.DECENTRALIZED_ID].includes(wallet.type))
-        .map((wallet) => {
-          const primaryTitle = wallet.name;
-
-          function handleSelect() {
-            handleSelectWallet(wallet.id);
-          }
-
-          return (
-            <CardListItem
-              onSelect={handleSelect}
-              key={wallet.id}
-              selected={wallet.id === Number(walletId)}
-            >
-              <Flex gap={0.5} flexDirection="column" height="100%" width="100%">
-                <Flex>
-                  <Typography>
-                    <strong>{primaryTitle}</strong>
-                  </Typography>
-                </Flex>
-                <Flex>
-                  <DisplayDid wallet={wallet} />
-                </Flex>
-              </Flex>
-            </CardListItem>
-          );
-        });
     }
-  }, [wallets, walletId, isLoading]);
+    const orderedProfiles = orderBy(wallets, ['id'], ['asc']);
+
+    return orderedProfiles
+      .filter((wallet) => [WalletType.DECENTRALIZED_ID].includes(wallet.type))
+      .map((wallet) => {
+        const primaryTitle = wallet.name;
+
+        function handleSelect() {
+          handleSelectWallet(wallet.id);
+        }
+
+        return (
+          <CardListItem onSelect={handleSelect} key={wallet.id} selected={wallet.id === Number(walletId)}>
+            <Flex gap={0.5} flexDirection="column" height="100%" width="100%">
+              <Flex>
+                <Typography>
+                  <strong>{primaryTitle}</strong>
+                </Typography>
+              </Flex>
+              <Flex>
+                <DisplayDid wallet={wallet} />
+              </Flex>
+            </Flex>
+          </CardListItem>
+        );
+      });
+  }, [isLoading, dids.length, wallets, navigate, walletId]);
 
   return (
     <StyledRoot>

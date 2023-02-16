@@ -1,7 +1,7 @@
 export { default as activateLocale } from './activateLocale';
 export { default as bigNumberToLocaleString } from './bigNumberToLocaleString';
 export { default as blockHeightToTimestamp } from './blockHeightToTimestamp';
-export { calculatePoolReward, calculateBaseFarmerReward, calculateCommunityReward , calculateTimelordReward  } from './blockRewards';
+export { calculatePoolReward, calculateBaseFarmerReward, calculateCommunityReward , calculateTimelordFee } from './blockRewards';
 export { default as catToMojo } from './catToMojo';
 export { default as oneFormatter } from './oneFormatter';
 export { default as oneToMojo } from './oneToMojo';
@@ -14,8 +14,6 @@ export { default as mojoToCATLocaleString } from './mojoToCATLocaleString';
 export { default as mojoToOne } from './mojoToOne';
 export { default as mojoToOneLocaleString } from './mojoToOneLocaleString';
 export { default as sleep } from './sleep';
-export {
-  default as useColorModeValue,
-  getColorModeValue,
-} from './useColorModeValue';
+export { default as useColorModeValue, getColorModeValue } from './useColorModeValue';
 export { default as validAddress } from './validAddress';
+export { default as LRU, lruCreate } from './lru';

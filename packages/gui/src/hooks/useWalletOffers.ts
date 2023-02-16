@@ -1,6 +1,6 @@
+import { OfferTradeRecord } from '@xone-network/api';
+import { useGetOffersCountQuery, useGetAllOffersQuery } from '@xone-network/api-react';
 import { useState } from 'react';
-import { useGetOffersCountQuery, useGetAllOffersQuery } from '@one/api-react';
-import { OfferTradeRecord } from '@one/api';
 
 export default function useWalletOffers(
   defaultRowsPerPage = 5,
@@ -8,7 +8,7 @@ export default function useWalletOffers(
   includeMyOffers = true,
   includeTakenOffers = true,
   sortKey?: 'CONFIRMED_AT_HEIGHT' | 'RELEVANCE',
-  reverse?: boolean,
+  reverse?: boolean
 ): {
   isLoading: boolean;
   offers?: OfferTradeRecord[];
@@ -25,9 +25,7 @@ export default function useWalletOffers(
 
   const all = rowsPerPage === -1;
 
-  const start = all
-    ? 0
-    : page * rowsPerPage;
+  const start = all ? 0 : page * rowsPerPage;
 
   let selectedCount = 0;
 
@@ -39,11 +37,13 @@ export default function useWalletOffers(
     selectedCount += counts?.takenOffersCount ?? 0;
   }
 
-  const end = all
-    ? selectedCount
-    : start + rowsPerPage;
+  const end = all ? selectedCount : start + rowsPerPage;
 
-  const { data: offers, isLoading: isOffersLoading, error: offersError } = useGetAllOffersQuery({
+  const {
+    data: offers,
+    isLoading: isOffersLoading,
+    error: offersError,
+  } = useGetAllOffersQuery({
     start,
     end,
     sortKey,
@@ -55,12 +55,12 @@ export default function useWalletOffers(
   const isLoading = isOffersLoading || isOffersCountLoading;
   const error = offersError || offersCountError;
 
-  function handlePageChange(rowsPerPage: number, page: number) {
-    setRowsPerPage(rowsPerPage);
-    setPage(page);
+  function handlePageChange(rowsPerPageLocal: number, pageLocal: number) {
+    setRowsPerPage(rowsPerPageLocal);
+    setPage(pageLocal);
   }
 
-  return  {
+  return {
     offers,
     count: selectedCount,
     page,

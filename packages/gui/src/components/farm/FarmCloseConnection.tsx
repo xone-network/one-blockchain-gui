@@ -1,4 +1,4 @@
-import { useCloseFarmerConnectionMutation } from '@one/api-react';
+import { useCloseFarmerConnectionMutation } from '@xone-network/api-react';
 
 type Props = {
   nodeId: string;

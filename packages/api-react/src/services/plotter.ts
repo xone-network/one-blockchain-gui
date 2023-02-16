@@ -1,39 +1,41 @@
-import { Plotter } from '@one/api';
-import type { Plot } from '@one/api';
-import onCacheEntryAddedInvalidate from '../utils/onCacheEntryAddedInvalidate';
-import api, { baseQuery } from '../api';
+import { PlotterService } from '@xone-network/api';
+import type { Plot } from '@xone-network/api';
 
-const apiWithTag = api.enhanceEndpoints({addTagTypes: ['PlotQueue']})
+import api, { baseQuery } from '../api';
+import onCacheEntryAddedInvalidate from '../utils/onCacheEntryAddedInvalidate';
+
+const apiWithTag = api.enhanceEndpoints({ addTagTypes: ['PlotQueue'] });
 
 export const plotterApi = apiWithTag.injectEndpoints({
   endpoints: (build) => ({
-    getPlotQueue: build.query<Plot[], {
-    }>({
+    getPlotQueue: build.query<Plot[], {}>({
       query: () => ({
         command: 'getQueue',
-        service: Plotter,
+        service: PlotterService,
       }),
       // transformResponse: (response: any) => response,
-      onCacheEntryAdded: onCacheEntryAddedInvalidate(baseQuery, [{
-        command: 'onQueueChanged',
-        service: Plotter,
-        endpoint: () => plotterApi.endpoints.getPlotQueue,
-      }]),
+      onCacheEntryAdded: onCacheEntryAddedInvalidate(baseQuery, [
+        {
+          command: 'onQueueChanged',
+          service: PlotterService,
+          endpoint: () => plotterApi.endpoints.getPlotQueue,
+        },
+      ]),
     }),
-/*
+    /*
     stopPlotting: build.mutation<boolean, {
       id: string;
     }>({
       query: ({ id }) => ({
         command: 'stopPlotting',
-        service: Plotter,
+        service: PlotterService,
         args: [id],
       }),
       transformResponse: (response: any) => response?.success,
       // providesTags: (_result, _err, { service }) => [{ type: 'ServiceRunning', id: service }],
     }),
     */
-/*
+    /*
     startPlotting: build.mutation<boolean, PlotAdd>({
       query: ({
         bladebitDisableNUMA,
@@ -62,7 +64,7 @@ export const plotterApi = apiWithTag.injectEndpoints({
         workspaceLocation2,
        }) => ({
         command: 'startPlotting',
-        service: Plotter,
+        service: PlotterService,
         args: [
           plotterName,
           plotSize,

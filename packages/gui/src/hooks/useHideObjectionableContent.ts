@@ -1,5 +1,5 @@
-import { useLocalStorage } from '@one/api-react';
+import { usePrefs } from '@xone-network/api-react';
 
 export default function useHideObjectionableContent() {
-  return useLocalStorage<boolean>('hideObjectionableContent', true);
+  return usePrefs<boolean>('hideObjectionableContent', true);
 }

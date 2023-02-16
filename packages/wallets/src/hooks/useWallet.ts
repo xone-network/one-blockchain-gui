@@ -1,8 +1,8 @@
+import { WalletType } from '@xone-network/api';
+import type { Wallet } from '@xone-network/api';
+import { useGetWalletsQuery, useGetCatListQuery } from '@xone-network/api-react';
+import { useCurrencyCode } from '@xone-network/core';
 import { useMemo } from 'react';
-import { useGetWalletsQuery, useGetCatListQuery } from '@one/api-react';
-import { WalletType } from '@one/api';
-import type { Wallet } from '@one/api';
-import { useCurrencyCode } from '@one/core';
 
 export default function useWallet(walletId?: number | string): {
   loading: boolean;
@@ -13,9 +13,10 @@ export default function useWallet(walletId?: number | string): {
   const { data: wallets, isLoading } = useGetWalletsQuery();
   const { data: catList = [], isLoading: isCatListLoading } = useGetCatListQuery();
 
-  const wallet = useMemo(() => {
-    return wallets?.find((item) => item.id.toString() === walletId?.toString());
-  }, [wallets, walletId]);
+  const wallet = useMemo(
+    () => wallets?.find((item) => item.id.toString() === walletId?.toString()),
+    [wallets, walletId]
+  );
 
   const unit = useMemo(() => {
     if (wallet) {
@@ -30,7 +31,8 @@ export default function useWallet(walletId?: number | string): {
 
       return currencyCode;
     }
-  }, [wallet, currencyCode, isCatListLoading]);
+    return undefined;
+  }, [wallet, isCatListLoading, currencyCode, catList]);
 
   return {
     wallet,

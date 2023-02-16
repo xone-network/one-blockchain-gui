@@ -1,4 +1,5 @@
-import type { PoolState } from '@one/api';
+import type { PoolState } from '@xone-network/api';
+
 import removeOldPoints from './removeOldPoints';
 
 export default function normalizePoolState(poolState: PoolState): PoolState {

@@ -1,54 +1,37 @@
-import React, { useMemo, useState, useRef, Fragment } from 'react';
-import { renderToString } from 'react-dom/server';
-import mime from 'mime-types';
+import { type NFTInfo } from '@xone-network/api';
+import { IconMessage, Loading, Flex, SandboxedIframe, Tooltip, usePersistState, useDarkMode } from '@xone-network/core';
 import { t, Trans } from '@lingui/macro';
-import { Box, Button, Typography } from '@mui/material';
-import CheckSvg from '@mui/icons-material/Check';
+import { NotInterested, Error as ErrorIcon } from '@mui/icons-material';
 import CloseSvg from '@mui/icons-material/Close';
 import QuestionMarkSvg from '@mui/icons-material/QuestionMark';
-import { NotInterested, Error as ErrorIcon } from '@mui/icons-material';
-import { useLocalStorage } from '@one/api-react';
-import { isImage, parseExtensionFromUrl } from '../../util/utils.js';
-
-import {
-  IconMessage,
-  Loading,
-  Flex,
-  SandboxedIframe,
-  Tooltip,
-  usePersistState,
-  useDarkMode,
-} from '@one/core';
+import { Box, Button, Typography } from '@mui/material';
+import mime from 'mime-types';
+import React, { useMemo, useState, useRef, Fragment } from 'react';
+import { renderToString } from 'react-dom/server';
 import styled from 'styled-components';
-import { type NFTInfo } from '@one/api';
 import isURL from 'validator/lib/isURL';
-import useVerifyHash from '../../hooks/useVerifyHash';
 
-import AudioSvg from '../../assets/img/audio.svg';
-import AudioPngIcon from '../../assets/img/audio.png';
-import UnknownPngIcon from '../../assets/img/unknown.png';
-import DocumentPngIcon from '../../assets/img/document.png';
-import VideoPngIcon from '../../assets/img/video.png';
-import ModelPngIcon from '../../assets/img/model.png';
-import AudioPngDarkIcon from '../../assets/img/audio_dark.png';
-import UnknownPngDarkIcon from '../../assets/img/unknown_dark.png';
-import DocumentPngDarkIcon from '../../assets/img/document_dark.png';
-import VideoPngDarkIcon from '../../assets/img/video_dark.png';
-import ModelPngDarkIcon from '../../assets/img/model_dark.png';
-
-import VideoBlobIcon from '../../assets/img/video-blob.svg';
-import AudioBlobIcon from '../../assets/img/audio-blob.svg';
-import ModelBlobIcon from '../../assets/img/model-blob.svg';
-import UnknownBlobIcon from '../../assets/img/unknown-blob.svg';
-import DocumentBlobIcon from '../../assets/img/document-blob.svg';
-
-import CompactIconSvg from '../../assets/img/nft-small-frame.svg';
-
-import VideoSmallIcon from '../../assets/img/video-small.svg';
 import AudioSmallIcon from '../../assets/img/audio-small.svg';
-import ModelSmallIcon from '../../assets/img/model-small.svg';
-import UnknownSmallIcon from '../../assets/img/unknown-small.svg';
+import DocumentBlobIcon from '../../assets/img/document-blob.svg';
 import DocumentSmallIcon from '../../assets/img/document-small.svg';
+import DocumentPngIcon from '../../assets/img/document.png';
+import DocumentPngDarkIcon from '../../assets/img/document_dark.png';
+import ModelBlobIcon from '../../assets/img/model-blob.svg';
+import ModelSmallIcon from '../../assets/img/model-small.svg';
+import ModelPngIcon from '../../assets/img/model.png';
+import ModelPngDarkIcon from '../../assets/img/model_dark.png';
+import CompactIconSvg from '../../assets/img/nft-small-frame.svg';
+import UnknownBlobIcon from '../../assets/img/unknown-blob.svg';
+import UnknownSmallIcon from '../../assets/img/unknown-small.svg';
+import UnknownPngIcon from '../../assets/img/unknown.png';
+import UnknownPngDarkIcon from '../../assets/img/unknown_dark.png';
+import VideoBlobIcon from '../../assets/img/video-blob.svg';
+import VideoSmallIcon from '../../assets/img/video-small.svg';
+import VideoPngIcon from '../../assets/img/video.png';
+import VideoPngDarkIcon from '../../assets/img/video_dark.png';
+import useNFTImageFittingMode from '../../hooks/useNFTImageFittingMode';
+import useVerifyHash from '../../hooks/useVerifyHash';
+import { isImage, parseExtensionFromUrl } from '../../util/utils';
 
 function responseTooLarge(error) {
   return error === 'Response too large';
@@ -62,74 +45,6 @@ const StyledCardPreview = styled(Box)`
   justify-content: center;
   align-items: center;
   overflow: hidden;
-`;
-
-const AudioWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background-image: url(${(props) =>
-    props.albumArt ? props.albumArt : 'none'});
-  background-position: center;
-  align-items: center;
-  justify-content: center;
-  > audio + svg {
-    margin-top: 20px;
-  }
-  audio {
-    position: absolute;
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-    bottom: 20px;
-    text-align: center;
-    // box-shadow: 0 3px 15px #000;
-    border-radius: 30px;
-  }
-  img {
-    width: 144px;
-    height: 144px;
-  }
-`;
-
-const AudioIconWrapper = styled.div`
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  background: #fff;
-  width: 54px;
-  height: 54px;
-  border-radius: 30px;
-  background: #f4f4f4;
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
-  right: 247px;
-  line-height: 66px;
-  transition: right 0.25s linear, width 0.25s linear, opacity 0.25s;
-  visibility: visible;
-  display: ${(props) => (props.isPreview ? 'inline-block' : 'none')};
-  box-shadow: 0px 0px 24px rgba(24, 162, 61, 0.5),
-    0px 4px 8px rgba(18, 99, 60, 0.32);
-  border-radius: 32px;
-  &.transition {
-    width: 300px;
-    right: 0px;
-    transition: right 0.25s linear, width 0.25s linear;
-  }
-  &.hide {
-    visibility: hidden;
-  }
-  &.dark {
-    background: #333;
-  }
-`;
-
-const AudioIcon = styled(AudioSvg)`
-  position: relative;
-  top: 2px;
 `;
 
 const IframeWrapper = styled.div`
@@ -147,7 +62,7 @@ const IframePreventEvents = styled.div`
   z-index: 2;
 `;
 
-const ModelExtension = styled.div`
+const ModelExtension = styled.div<{ isDarkMode: boolean }>`
   position: relative;
   top: -20px;
   display: flex;
@@ -155,50 +70,9 @@ const ModelExtension = styled.div`
   align-items: center;
   padding: 8px 16px;
   background: ${(props) => (props.isDarkMode ? '#333' : '#fff')};
-  box-shadow: 0px 0px 24px rgba(24, 162, 61, 0.5),
-    0px 4px 8px rgba(18, 99, 60, 0.32);
+  box-shadow: 0px 0px 24px rgba(24, 162, 61, 0.5), 0px 4px 8px rgba(18, 99, 60, 0.32);
   border-radius: 32px;
   color: ${(props) => (props.isDarkMode ? '#fff' : '#333')};
-`;
-
-const AudioControls = styled.div`
-  visibility: ${(props) => (props.isPreview ? 'hidden' : 'visible')};
-  &.transition {
-    visibility: visible;
-  }
-  audio {
-    box-shadow: 0px 0px 24px rgba(24, 162, 61, 0.5),
-      0px 4px 8px rgba(18, 99, 60, 0.32);
-    border-radius: 32px;
-    &.dark {
-      ::-webkit-media-controls-enclosure {
-        background-color: #333;
-      }
-      ::-webkit-media-controls-play-button {
-        background-image: url('data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiBoZWlnaHQ9IjI0IiB3aWR0aD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTggNXYxNGwxMS03eiIvPjxwYXRoIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz48L3N2Zz4=');
-      }
-      ::-webkit-media-controls-current-time-display {
-        color: #fff;
-      }
-      ::-webkit-media-controls-time-remaining-display {
-        color: #fff;
-      }
-      ::-webkit-media-controls-mute-button {
-        background-image: url('data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0zIDl2Nmg0bDUgNVY0TDcgOUgzem0xMy41IDNjMC0xLjc3LTEuMDItMy4yOS0yLjUtNC4wM3Y4LjA1YzEuNDgtLjczIDIuNS0yLjI1IDIuNS00LjAyek0xNCAzLjIzdjIuMDZjMi44OS44NiA1IDMuNTQgNSA2Ljcxcy0yLjExIDUuODUtNSA2LjcxdjIuMDZjNC4wMS0uOTEgNy00LjQ5IDctOC43N3MtMi45OS03Ljg2LTctOC43N3oiLz4KICAgIDxwYXRoIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz4KPC9zdmc+');
-      }
-      ::--webkit-media-controls-fullscreen-button {
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMjQgMjQiIHhtbDpzcGFjZT0icHJlc2VydmUiIGZpbGw9IldpbmRvd1RleHQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iNiIgcj0iMiIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IiNmZmYiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjE4IiByPSIjZmZmIi8+PC9zdmc+');
-      }
-      ::-webkit-media-controls-toggle-closed-captions-button {
-        display: none;
-      }
-      ::-webkit-media-controls-timeline {
-        background: #444;
-        border-radius: 4px;
-        margin-left: 7px;
-      }
-    }
-  }
 `;
 
 const StatusContainer = styled.div`
@@ -213,11 +87,8 @@ const StatusContainer = styled.div`
 `;
 
 const StatusPill = styled.div`
-  background-color: ${({ theme }) => {
-    return theme.palette.mode === 'dark'
-      ? 'rgba(50, 50, 50, 0.4)'
-      : 'rgba(255, 255, 255, 0.4)';
-  }};
+  background-color: ${({ theme }) =>
+    theme.palette.mode === 'dark' ? 'rgba(50, 50, 50, 0.4)' : 'rgba(255, 255, 255, 0.4)'};
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 16px;
@@ -238,7 +109,7 @@ const StatusText = styled.div`
   text-shadow: 0px 1px 4px black;
 `;
 
-const BlobBg = styled.div`
+const BlobBg = styled.div<{ isDarkMode: boolean }>`
   > svg {
     position: absolute;
     left: 0;
@@ -297,18 +168,12 @@ const CompactExtension = styled.div`
 
 const Sha256ValidatedIcon = styled.div`
   position: absolute;
-  background: ${({ theme }) => {
-    return theme.palette.mode === 'dark'
-      ? 'rgba(33, 33, 33, 0.5)'
-      : 'rgba(255, 255, 255, 0.66)';
-  }};
-  color: ${({ theme }) => {
-    return theme.palette.mode === 'dark' ? '#fff' : '#333';
-  }};
+  background: ${({ theme }) => (theme.palette.mode === 'dark' ? 'rgba(33, 33, 33, 0.5)' : 'rgba(255, 255, 255, 0.66)')};
+  color: ${({ theme }) => (theme.palette.mode === 'dark' ? '#fff' : '#333')};
   border-radius: 18px;
   padding: 0 8px;
   top: 10px;
-  right: 10px;
+  left: 10px;
   z-index: 3;
   line-height: 25px;
   box-shadow: 0 0 2px 0 #ccc;
@@ -323,12 +188,6 @@ const Sha256ValidatedIcon = styled.div`
     height: 20px;
     margin-left: -3px;
     margin-right: -3px;
-  }
-`;
-
-const CheckIcon = styled(CheckSvg)`
-  path {
-    fill: #3aac59;
   }
 `;
 
@@ -349,44 +208,41 @@ export type NFTPreviewProps = {
   height?: number | string;
   width?: number | string;
   fit?: 'cover' | 'contain' | 'fill';
-  elevate?: boolean;
   background?: any;
-  hideStatusBar?: boolean;
   isPreview?: boolean;
-  metadata?: any;
   disableThumbnail?: boolean;
   isCompact?: boolean;
-  metadataError: any;
-  validateNFT: boolean;
-  isLoadingMetadata?: boolean;
+  miniThumb?: boolean;
+  setNFTCardMetadata: (obj: any) => void;
 };
 
-let loopImageInterval: any;
-let audioAnimationInterval;
+function ThumbnailError({ children }: any) {
+  return (
+    <StatusContainer>
+      <StatusPill>
+        <StatusText>{children}</StatusText>
+      </StatusPill>
+    </StatusContainer>
+  );
+}
 
-//=========================================================================//
+// ======================================================================= //
 // NFTPreview function
-//=========================================================================//
+// ======================================================================= //
 export default function NFTPreview(props: NFTPreviewProps) {
-  let isPlaying: boolean = false;
-  React.useEffect(() => {
-    isPlaying = false;
-  }, []);
+  const [nftImageFittingMode] = useNFTImageFittingMode();
   const {
     nft,
     nft: { dataUris },
     height = '300px',
     width = '100%',
-    fit = 'cover',
+    fit = nftImageFittingMode,
     background: Background = Fragment,
-    hideStatusBar = false,
     isPreview = false,
     isCompact = false,
-    metadata,
     disableThumbnail = false,
-    metadataError,
-    validateNFT,
-    isLoadingMetadata,
+    miniThumb,
+    setNFTCardMetadata,
   } = props;
 
   const hasFile = dataUris?.length > 0;
@@ -394,7 +250,7 @@ export default function NFTPreview(props: NFTPreviewProps) {
   let extension = '';
 
   try {
-    extension = new URL(file).pathname.split('.').slice(-1)[0];
+    [extension] = new URL(file).pathname.split('.').slice(-1);
     if (!extension.match(/^[a-zA-Z0-9]+$/)) {
       extension = '';
     }
@@ -404,34 +260,29 @@ export default function NFTPreview(props: NFTPreviewProps) {
 
   const [ignoreSizeLimit, setIgnoreSizeLimit] = usePersistState<boolean>(
     false,
-    `nft-preview-ignore-size-limit-${nft.$nftId}-${file}`,
+    `nft-preview-ignore-size-limit-${nft.$nftId}-${file}`
   );
 
   const [loaded, setLoaded] = useState(false);
 
-  const { isLoading, error, thumbnail } = useVerifyHash({
+  const [metadataError, setNFTPreviewMetadataError] = useState<string | undefined>(undefined);
+
+  const { isLoading, error, thumbnail, isValid } = useVerifyHash({
     nft,
     ignoreSizeLimit,
-    metadata,
-    isLoadingMetadata,
-    metadataError,
     isPreview,
     dataHash: nft.dataHash,
     nftId: nft.$nftId,
-    validateNFT,
+    setNFTCardMetadata,
+    setNFTPreviewMetadataError,
   });
-
-  const [contentCache] = useLocalStorage(`content-cache-${nft.$nftId}`, {});
 
   const [ignoreError, setIgnoreError] = usePersistState<boolean>(
     false,
-    `nft-preview-ignore-error-${nft.$nftId}-${file}`,
+    `nft-preview-ignore-error-${nft.$nftId}-${file}`
   );
 
   const iframeRef = useRef<any>(null);
-  const audioIconRef = useRef<any>(null);
-  const audioControlsRef = useRef<any>(null);
-  const videoThumbnailRef = useRef<any>(null);
 
   const isUrlValid = useMemo(() => {
     if (!file) {
@@ -443,9 +294,26 @@ export default function NFTPreview(props: NFTPreviewProps) {
 
   const { isDarkMode } = useDarkMode();
 
-  const [srcDoc, hasPlaybackControls] = useMemo(() => {
+  const mimeType = React.useCallback((): string => {
+    let pathName = '';
+    try {
+      pathName = new URL(file).pathname;
+    } catch (e) {
+      console.error(`Failed to check file extension for ${file}: ${e}`);
+    }
+    return mime.lookup(pathName) || '';
+  }, [file]);
+
+  const isAudio = React.useCallback(
+    () =>
+      mimeType().match(/^audio/) &&
+      (!isPreview || (isPreview && !thumbnail.video && !thumbnail.image) || disableThumbnail),
+    [isPreview, thumbnail?.video, thumbnail?.image, disableThumbnail, mimeType]
+  );
+
+  const [srcDoc] = useMemo(() => {
     if (!file) {
-      return;
+      return undefined;
     }
 
     const style = `
@@ -527,48 +395,33 @@ export default function NFTPreview(props: NFTPreviewProps) {
           }
         }
       }
+      video::-webkit-media-controls {
+          display: none;
+      }
     `;
 
     let mediaElement = null;
-    let hasPlaybackControls = false;
 
     if (thumbnail.image) {
-      mediaElement = (
-        <img
-          src={thumbnail.image}
-          alt={t`Preview`}
-          width="100%"
-          height="100%"
-        />
-      );
+      mediaElement = <img src={thumbnail.image} alt={t`Preview`} width="100%" height="100%" />;
     } else if (mimeType().match(/^video/)) {
       mediaElement = (
         <video width="100%" height="100%">
           <source src={thumbnail.binary || file} />
         </video>
       );
-      hasPlaybackControls = true;
     } else if (parseExtensionFromUrl(file) === 'svg') {
       /* cached svg exception */
       mediaElement = <div id="replace-with-svg" />;
     } else {
-      mediaElement = (
-        <img
-          src={thumbnail.binary || file}
-          alt={t`Preview`}
-          width="100%"
-          height="100%"
-        />
-      );
+      mediaElement = <img src={thumbnail.binary || file} alt={t`Preview`} width="100%" height="100%" />;
     }
 
-    if (isPreview && thumbnail.video && !disableThumbnail) {
+    if (isPreview && thumbnail.video && !disableThumbnail && !miniThumb) {
       mediaElement = (
-        <>
-          <video width="100%" height="100%" controls>
-            <source src={thumbnail.video} />
-          </video>
-        </>
+        <video width="100%" height="100%" controls>
+          <source src={thumbnail.video} />
+        </video>
       );
     }
 
@@ -586,28 +439,18 @@ export default function NFTPreview(props: NFTPreviewProps) {
           <style dangerouslySetInnerHTML={{ __html: style }} />
         </head>
         <body>{mediaElement}</body>
-      </html>,
+      </html>
     );
 
     /* cached svg exception */
     elem = elem.replace(`<div id="replace-with-svg"></div>`, thumbnail.binary);
 
-    return [elem, hasPlaybackControls];
-  }, [file, thumbnail, error]);
+    return [elem];
+  }, [file, thumbnail, disableThumbnail, fit, isPreview, isAudio, isDarkMode, mimeType, miniThumb]);
 
-  function mimeType(): string {
-    let pathName = '';
-    try {
-      pathName = new URL(file).pathname;
-    } catch (e) {
-      console.error(`Failed to check file extension for ${file}: ${e}`);
-    }
-    return mime.lookup(pathName) || '';
-  }
-
-  function handleLoadedChange(loadedValue: any) {
+  const handleLoadedChange = React.useCallback((loadedValue: any) => {
     setLoaded(loadedValue);
-  }
+  }, []);
 
   function handleIgnoreError(event: any) {
     event.stopPropagation();
@@ -619,40 +462,30 @@ export default function NFTPreview(props: NFTPreviewProps) {
   }
 
   function isDocument() {
-    return (
-      [
-        'pdf',
-        'docx',
-        'doc',
-        'xls',
-        'xlsx',
-        'ppt',
-        'pptx',
-        'txt',
-        'rtf',
-      ].indexOf(extension) > -1
-    );
-  }
-
-  function isAudio() {
-    return (
-      mimeType().match(/^audio/) &&
-      (!isPreview ||
-        (isPreview && !thumbnail.video && !thumbnail.image) ||
-        disableThumbnail)
-    );
+    return ['pdf', 'docx', 'doc', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf'].indexOf(extension) > -1;
   }
 
   function renderCompactIcon() {
     return (
-      <CompactIconFrame>
-        <CompactIcon />
+      <>
         {mimeType().match(/^video/) && <CompactVideoIcon />}
         {mimeType().match(/^audio/) && <CompactAudioIcon />}
         {mimeType().match(/^model/) && <CompactModelIcon />}
         {isDocument() && <CompactDocumentIcon />}
         {isUnknownType() && <CompactUnknownIcon />}
         {extension && <CompactExtension>.{extension}</CompactExtension>}
+      </>
+    );
+  }
+
+  function renderCompactIconWrapper() {
+    if (miniThumb) {
+      return renderCompactIcon();
+    }
+    return (
+      <CompactIconFrame>
+        <CompactIcon />
+        {renderCompactIcon()}
       </CompactIconFrame>
     );
   }
@@ -660,41 +493,34 @@ export default function NFTPreview(props: NFTPreviewProps) {
   function renderNftIcon() {
     if (isDocument()) {
       return (
-        <>
-          <BlobBg isDarkMode={isDarkMode}>
-            <DocumentBlobIcon />
-            <img src={isDarkMode ? DocumentPngDarkIcon : DocumentPngIcon} />
-          </BlobBg>
-        </>
-      );
-    } else if (mimeType().match(/^model/)) {
-      return (
-        <>
-          <BlobBg isDarkMode={isDarkMode}>
-            <ModelBlobIcon />
-            <img src={isDarkMode ? ModelPngDarkIcon : ModelPngIcon} />
-          </BlobBg>
-        </>
-      );
-    } else if (mimeType().match(/^video/)) {
-      return (
-        <>
-          <BlobBg isDarkMode={isDarkMode}>
-            <VideoBlobIcon />
-            <img src={isDarkMode ? VideoPngDarkIcon : VideoPngIcon} />
-          </BlobBg>
-        </>
-      );
-    } else {
-      return (
-        <>
-          <BlobBg isDarkMode={isDarkMode}>
-            <UnknownBlobIcon />
-            <img src={isDarkMode ? UnknownPngDarkIcon : UnknownPngIcon} />;
-          </BlobBg>
-        </>
+        <BlobBg isDarkMode={isDarkMode}>
+          <DocumentBlobIcon />
+          <img src={isDarkMode ? DocumentPngDarkIcon : DocumentPngIcon} />
+        </BlobBg>
       );
     }
+    if (mimeType().match(/^model/)) {
+      return (
+        <BlobBg isDarkMode={isDarkMode}>
+          <ModelBlobIcon />
+          <img src={isDarkMode ? ModelPngDarkIcon : ModelPngIcon} />
+        </BlobBg>
+      );
+    }
+    if (mimeType().match(/^video/)) {
+      return (
+        <BlobBg isDarkMode={isDarkMode}>
+          <VideoBlobIcon />
+          <img src={isDarkMode ? VideoPngDarkIcon : VideoPngIcon} />
+        </BlobBg>
+      );
+    }
+    return (
+      <BlobBg isDarkMode={isDarkMode}>
+        <UnknownBlobIcon />
+        <img src={isDarkMode ? UnknownPngDarkIcon : UnknownPngIcon} />;
+      </BlobBg>
+    );
   }
 
   function isUnknownType() {
@@ -713,14 +539,10 @@ export default function NFTPreview(props: NFTPreviewProps) {
     }
 
     if (isCompact && !isImage(file)) {
-      return renderCompactIcon();
+      return renderCompactIconWrapper();
     }
 
-    const isOfferNft =
-      disableThumbnail &&
-      !mimeType().match(/^video/) &&
-      !mimeType().match(/^audio/) &&
-      !isImage(file);
+    const isOfferNft = disableThumbnail && !mimeType().match(/^video/) && !mimeType().match(/^audio/) && !isImage(file);
 
     const isPreviewNft =
       mimeType() !== '' &&
@@ -732,19 +554,13 @@ export default function NFTPreview(props: NFTPreviewProps) {
       !disableThumbnail;
 
     const notPreviewNft =
-      !disableThumbnail &&
-      !isPreview &&
-      (mimeType().match(/^model/) || isDocument() || isUnknownType());
+      !disableThumbnail && !isPreview && (mimeType().match(/^model/) || isDocument() || isUnknownType());
 
     if (isOfferNft || isPreviewNft || notPreviewNft) {
       return (
         <>
           {renderNftIcon()}
-          {extension && (
-            <ModelExtension isDarkMode={isDarkMode}>
-              .{extension}
-            </ModelExtension>
-          )}
+          {extension && <ModelExtension isDarkMode={isDarkMode}>.{extension}</ModelExtension>}
         </>
       );
     }
@@ -757,31 +573,23 @@ export default function NFTPreview(props: NFTPreviewProps) {
           height={height}
           onLoadedChange={handleLoadedChange}
           hideUntilLoaded
-          allowPointerEvents={true}
+          allowPointerEvents
+          miniThumb={miniThumb}
         />
       </IframeWrapper>
     );
   }
 
-  function ThumbnailError(props: any) {
-    return (
-      <StatusContainer>
-        <StatusPill>
-          <StatusText>{props.children}</StatusText>
-        </StatusPill>
-      </StatusContainer>
-    );
-  }
-
   function renderIsHashValid() {
+    if (isValid || miniThumb) return null;
     let icon = null;
     let tooltipString = null;
 
     if (isPreview) {
-      if (contentCache.valid === undefined) {
+      if (isValid === undefined) {
         icon = <QuestionMarkIcon />;
         tooltipString = t`Content has not been validated against the hash that was specified during NFT minting.`;
-      } else if (!contentCache.valid) {
+      } else if (!isValid) {
         icon = <CloseIcon />;
         tooltipString = t`Content does not match the expected hash value that was specified during NFT minting. The content may have been modified.`;
       }
@@ -789,9 +597,7 @@ export default function NFTPreview(props: NFTPreviewProps) {
 
     if (icon && tooltipString) {
       return (
-        <Tooltip
-          title={<Typography variant="caption">{tooltipString}</Typography>}
-        >
+        <Tooltip title={<Typography variant="caption">{tooltipString}</Typography>}>
           <Sha256ValidatedIcon>{icon} HASH</Sha256ValidatedIcon>
         </Tooltip>
       );
@@ -802,9 +608,9 @@ export default function NFTPreview(props: NFTPreviewProps) {
   const showLoading = isLoading;
 
   return (
-    <StyledCardPreview height={height} width={width}>
+    <StyledCardPreview height={miniThumb ? '50px' : height} width={width}>
       {renderIsHashValid()}
-      {!hasFile ? (
+      {miniThumb ? null : !hasFile ? (
         <Background>
           <IconMessage icon={<NotInterested fontSize="large" />}>
             <Trans>No file available</Trans>
@@ -838,23 +644,17 @@ export default function NFTPreview(props: NFTPreviewProps) {
         <ThumbnailError>
           <Trans>Error fetching video preview</Trans>
         </ThumbnailError>
-      ) : metadataError?.message === 'Metadata hash mismatch' ? (
+      ) : metadataError === 'Metadata hash mismatch' ? (
         <ThumbnailError>
           <Trans>Metadata hash mismatch</Trans>
         </ThumbnailError>
-      ) : typeof metadataError === 'string' &&
-        (metadataError === 'Invalid URL' ||
-          metadataError.indexOf('getaddrinfo ENOTFOUND') > -1) ? (
+      ) : metadataError === 'Invalid URI' || (metadataError && metadataError.indexOf('getaddrinfo ENOTFOUND') > -1) ? (
         <ThumbnailError>
           <Trans>Invalid metadata url</Trans>
         </ThumbnailError>
       ) : error === 'Error parsing json' ? (
         <ThumbnailError>
           <Trans>Error parsing json</Trans>
-        </ThumbnailError>
-      ) : metadataError?.message === 'Hash mismatch' ? (
-        <ThumbnailError>
-          <Trans>Metadata hash mismatch</Trans>
         </ThumbnailError>
       ) : responseTooLarge(error) && !ignoreError ? (
         <Background>
@@ -863,12 +663,7 @@ export default function NFTPreview(props: NFTPreviewProps) {
               <Trans>Response too large</Trans>
             </IconMessage>
             {error !== 'url is not defined' && (
-              <Button
-                onClick={handleIgnoreError}
-                variant="outlined"
-                size="small"
-                color="secondary"
-              >
+              <Button onClick={handleIgnoreError} variant="outlined" size="small" color="secondary">
                 <Trans>Show Preview</Trans>
               </Button>
             )}
@@ -877,23 +672,13 @@ export default function NFTPreview(props: NFTPreviewProps) {
       ) : null}
       <>
         {(showLoading ||
-          (!loaded &&
-            isImage(file) &&
-            !thumbnail.image &&
-            !thumbnail.video &&
-            isUrlValid)) &&
-          !responseTooLarge(error) && (
-            <Flex
-              position="absolute"
-              left="0"
-              top="0"
-              bottom="0"
-              right="0"
-              justifyContent="center"
-              alignItems="center"
-            >
+          (!loaded && isImage(file) && !thumbnail.image && !thumbnail.video) ||
+          (!isPreview && !loaded && isImage(file))) &&
+          !responseTooLarge(error) &&
+          isUrlValid && (
+            <Flex position="absolute" left="0" top="0" bottom="0" right="0" justifyContent="center" alignItems="center">
               <Loading center>
-                <Trans>Loading preview...</Trans>
+                {!miniThumb && <Trans>{isPreview ? 'Loading preview...' : 'Loading NFT...'}</Trans>}
               </Loading>
             </Flex>
           )}

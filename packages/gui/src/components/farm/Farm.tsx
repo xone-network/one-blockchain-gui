@@ -1,14 +1,15 @@
-import React from 'react';
+import { useGetHarvesterConnectionsQuery, useGetTotalHarvestersSummaryQuery } from '@xone-network/api-react';
+import { AdvancedOptions, Flex, LayoutDashboardSub, Loading } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { AdvancedOptions, Flex, LayoutDashboardSub, Loading } from '@one/core';
-import { useGetHarvesterConnectionsQuery, useGetTotalHarvestersSummaryQuery } from '@one/api-react';
-import FarmHeader from './FarmHeader';
-import FarmLatestBlockChallenges from './FarmLatestBlockChallenges';
+import React from 'react';
+
 import FarmFullNodeConnections from './FarmFullNodeConnections';
-import FarmYourHarvesterNetwork from './FarmYourHarvesterNetwork';
-import FarmLastAttemptedProof from './FarmLastAttemptedProof';
-import FarmCards from './card/FarmCards';
+import FarmHeader from './FarmHeader';
 import FarmHero from './FarmHero';
+import FarmLastAttemptedProof from './FarmLastAttemptedProof';
+import FarmLatestBlockChallenges from './FarmLatestBlockChallenges';
+import FarmYourHarvesterNetwork from './FarmYourHarvesterNetwork';
+import FarmCards from './card/FarmCards';
 
 export default function Farm() {
   const { hasPlots, initialized, isLoading } = useGetTotalHarvestersSummaryQuery();

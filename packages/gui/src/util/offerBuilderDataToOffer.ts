@@ -1,19 +1,20 @@
-import type { Wallet } from '@one/api';
-import { WalletType } from '@one/api';
+import type { Wallet } from '@xone-network/api';
+import { WalletType } from '@xone-network/api';
+import { oneToMojo, catToMojo } from '@xone-network/core';
 import { t } from '@lingui/macro';
-import { oneToMojo, catToMojo } from '@one/core';
 import BigNumber from 'bignumber.js';
+
+import type Driver from '../@types/Driver';
 import type OfferBuilderData from '../@types/OfferBuilderData';
 import findCATWalletByAssetId from './findCATWalletByAssetId';
-import { prepareNFTOfferFromNFTId } from './prepareNFTOffer';
 import hasSpendableBalance from './hasSpendableBalance';
-import type Driver from '../@types/Driver';
+import { prepareNFTOfferFromNFTId } from './prepareNFTOffer';
 
 // Amount exceeds spendable balance
 export default async function offerBuilderDataToOffer(
   data: OfferBuilderData,
   wallets: Wallet[],
-  validateOnly?: boolean,
+  validateOnly?: boolean
 ): Promise<{
   walletIdsAndAmounts?: Record<string, BigNumber>;
   driverDict?: Record<string, any>;
@@ -21,17 +22,8 @@ export default async function offerBuilderDataToOffer(
   validateOnly?: boolean;
 }> {
   const {
-    offered: {
-      xone: offeredXch = [],
-      tokens: offeredTokens = [],
-      nfts: offeredNfts = [],
-      fee: [firstFee] = [],
-    },
-    requested: {
-      xone: requestedXch = [],
-      tokens: requestedTokens = [],
-      nfts: requestedNfts = [],
-    },
+    offered: { xone: offeredXone = [], tokens: offeredTokens = [], nfts: offeredNfts = [], fee: [firstFee] = [] },
+    requested: { xone: requestedXone = [], tokens: requestedTokens = [], nfts: requestedNfts = [] },
   } = data;
 
   const usedNFTs: string[] = [];
@@ -41,21 +33,14 @@ export default async function offerBuilderDataToOffer(
   const walletIdsAndAmounts: Record<string, BigNumber> = {};
   const driverDict: Record<string, Driver> = {};
 
-  const hasOffer =
-    !!offeredXch.length || !!offeredTokens.length || !!offeredNfts.length;
-  const hasRequest =
-    !!requestedXch.length || !!requestedTokens.length || !!requestedNfts.length;
-
-  if (!hasRequest) {
-    throw new Error(t`Please specify at least one requested asset`);
-  }
+  const hasOffer = !!offeredXone.length || !!offeredTokens.length || !!offeredNfts.length;
 
   if (!hasOffer) {
     throw new Error(t`Please specify at least one offered asset`);
   }
 
   await Promise.all(
-    offeredXch.map(async (xone) => {
+    offeredXone.map(async (xone) => {
       const { amount } = xone;
       if (!amount || amount === '0') {
         throw new Error(t`Please enter an XONE amount`);
@@ -73,7 +58,7 @@ export default async function offerBuilderDataToOffer(
       if (!hasEnoughBalance) {
         throw new Error(t`Amount exceeds XONE spendable balance`);
       }
-    }),
+    })
   );
 
   await Promise.all(
@@ -90,9 +75,7 @@ export default async function offerBuilderDataToOffer(
       }
 
       if (!amount || amount === '0') {
-        throw new Error(
-          t`Please enter an amount for ${wallet.meta?.name} token`,
-        );
+        throw new Error(t`Please enter an amount for ${wallet.meta?.name} token`);
       }
 
       const mojoAmount = catToMojo(amount);
@@ -100,11 +83,9 @@ export default async function offerBuilderDataToOffer(
 
       const hasEnoughBalance = await hasSpendableBalance(wallet.id, mojoAmount);
       if (!hasEnoughBalance) {
-        throw new Error(
-          t`Amount exceeds spendable balance for ${wallet.meta?.name} token`,
-        );
+        throw new Error(t`Amount exceeds spendable balance for ${wallet.meta?.name} token`);
       }
-    }),
+    })
   );
 
   await Promise.all(
@@ -114,20 +95,17 @@ export default async function offerBuilderDataToOffer(
       }
       usedNFTs.push(nftId);
 
-      const { id, amount, driver } = await prepareNFTOfferFromNFTId(
-        nftId,
-        true,
-      );
+      const { id, amount, driver } = await prepareNFTOfferFromNFTId(nftId, true);
 
       walletIdsAndAmounts[id] = amount;
       if (driver) {
         driverDict[id] = driver;
       }
-    }),
+    })
   );
 
   // requested
-  requestedXch.forEach((xone) => {
+  requestedXone.forEach((xone) => {
     const { amount } = xone;
     if (!amount || amount === '0') {
       throw new Error(t`Please enter an XONE amount`);
@@ -171,16 +149,13 @@ export default async function offerBuilderDataToOffer(
       }
       usedNFTs.push(nftId);
 
-      const { id, amount, driver } = await prepareNFTOfferFromNFTId(
-        nftId,
-        false,
-      );
+      const { id, amount, driver } = await prepareNFTOfferFromNFTId(nftId, false);
 
       walletIdsAndAmounts[id] = amount;
       if (driver) {
         driverDict[id] = driver;
       }
-    }),
+    })
   );
 
   return {

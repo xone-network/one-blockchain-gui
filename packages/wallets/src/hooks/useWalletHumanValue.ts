@@ -1,17 +1,20 @@
-import { useMemo } from 'react';
-import type { Wallet } from '@one/api';
-import { WalletType } from '@one/api';
+import type { Wallet } from '@xone-network/api';
+import { WalletType } from '@xone-network/api';
+import { mojoToCATLocaleString, mojoToOneLocaleString, useLocale } from '@xone-network/core';
 import BigNumber from 'bignumber.js';
-import { mojoToCATLocaleString, mojoToOneLocaleString, useLocale } from '@one/core';
+import { useMemo } from 'react';
 
-export default function useWalletHumanValue(wallet: Wallet, value?: string | number | BigNumber, unit?: string): string {
+export default function useWalletHumanValue(
+  wallet: Wallet,
+  value?: string | number | BigNumber,
+  unit?: string
+): string {
   const [locale] = useLocale();
 
   return useMemo(() => {
     if (wallet && value !== undefined) {
-      const localisedValue = wallet.type === WalletType.CAT
-        ? mojoToCATLocaleString(value, locale)
-        : mojoToOneLocaleString(value, locale);
+      const localisedValue =
+        wallet.type === WalletType.CAT ? mojoToCATLocaleString(value, locale) : mojoToOneLocaleString(value, locale);
 
       return `${localisedValue} ${unit}`;
     }

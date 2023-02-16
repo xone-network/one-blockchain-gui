@@ -1,9 +1,9 @@
+import Client, { Service as ServiceType } from '@xone-network/api';
 import { BaseQueryFn } from '@reduxjs/toolkit/query/react';
-import Client, { Service } from '@one/api';
 
 type Options = {
   client: Client;
-  service: Service;
+  service: ServiceType;
 };
 
 export default function oneBaseQuery(options: Options): BaseQueryFn<

@@ -1,11 +1,12 @@
-import { SyncingStatus } from '@one/api';
+import { SyncingStatus } from '@xone-network/api';
 
 export default function getWalletSyncingStatus(walletState) {
   const { syncing, synced } = walletState;
 
   if (syncing) {
     return SyncingStatus.SYNCING;
-  } else if (synced) {
+  }
+  if (synced) {
     return SyncingStatus.SYNCED;
   }
 

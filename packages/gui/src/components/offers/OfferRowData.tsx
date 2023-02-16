@@ -1,5 +1,4 @@
-import type BigNumber from 'bignumber.js';
-import { type WalletType } from '@one/api';
+import { WalletType } from '@xone-network/api';
 
 type OfferRowData = {
   amount: string;

@@ -1,10 +1,11 @@
-import React from 'react';
+import { useRefreshPlotsMutation } from '@xone-network/api-react';
+import { Button, CardHero, Flex, Link, useOpenDialog } from '@xone-network/core';
+import { Plots } from '@xone-network/icons';
 import { Trans } from '@lingui/macro';
-import { useNavigate } from 'react-router-dom';
-import { useRefreshPlotsMutation } from '@one/api-react';
 import { Grid, Typography, Divider } from '@mui/material';
-import { Button, CardHero, Flex, Link, useOpenDialog } from '@one/core';
-import { Plots } from '@one/icons';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import PlotAddDirectoryDialog from '../PlotAddDirectoryDialog';
 
 export default function PlotOverviewHero() {
@@ -31,31 +32,17 @@ export default function PlotOverviewHero() {
           <Plots color="primary" fontSize="extraLarge" />
           <Typography variant="body1">
             <Trans>
-              Plots are allocated space on your hard drive used to farm and earn One.
-              &nbsp;
-              <Link
-                target="_blank"
-                href="https://github.com/xone-network/one-blockchain/wiki/Network-Architecture"
-              >
+              Plots are allocated space on your hard drive used to farm and earn One. &nbsp;
+              <Link target="_blank" href="https://github.com/xone-network/one-blockchain/wiki/Network-Architecture">
                 Learn more
               </Link>
             </Trans>
           </Typography>
           <Flex gap={1}>
-            <Button
-              onClick={handleAddPlot}
-              variant="contained"
-              color="primary"
-              fullWidth
-            >
+            <Button onClick={handleAddPlot} variant="contained" color="primary" fullWidth>
               <Trans>Add a Plot</Trans>
             </Button>
-            <Button
-              onClick={handleRefreshPlots}
-              variant="outlined"
-              color="secondary"
-              fullWidth
-            >
+            <Button onClick={handleRefreshPlots} variant="outlined" color="secondary" fullWidth>
               <Trans>Refresh Plots</Trans>
             </Button>
           </Flex>

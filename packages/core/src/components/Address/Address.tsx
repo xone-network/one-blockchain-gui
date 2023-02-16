@@ -1,11 +1,12 @@
-import React from 'react';
+import { toBech32m } from '@xone-network/api';
 import { Box } from '@mui/material';
+import React from 'react';
 import styled from 'styled-components';
-import { toBech32m } from '@one/api';
+
 import useCurrencyCode from '../../hooks/useCurrencyCode';
-import Tooltip from '../Tooltip';
 import CopyToClipboard from '../CopyToClipboard';
 import Flex from '../Flex';
+import Tooltip from '../Tooltip';
 
 const StyledValue = styled(Box)`
   word-break: break-all;
@@ -19,11 +20,9 @@ type Props = {
 };
 
 export default function Address(props: Props) {
-  const { value, copyToClipboard, tooltip, children } = props;
-
+  const { value, copyToClipboard = false, tooltip = false, children } = props;
   const currencyCode = useCurrencyCode();
-  const address =
-    currencyCode && value ? toBech32m(value, currencyCode.toLowerCase()) : '';
+  const address = currencyCode && value ? toBech32m(value, currencyCode.toLowerCase()) : '';
 
   if (!children) {
     if (copyToClipboard) {
@@ -57,8 +56,3 @@ export default function Address(props: Props) {
 
   return children(address);
 }
-
-Address.defaultProps = {
-  copyToClipboard: false,
-  tooltip: false,
-};

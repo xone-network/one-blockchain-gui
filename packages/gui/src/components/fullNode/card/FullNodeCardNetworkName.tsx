@@ -1,7 +1,7 @@
-import React from 'react';
+import { useGetNetworkInfoQuery } from '@xone-network/api-react';
+import { CardSimple } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { useGetNetworkInfoQuery } from '@one/api-react';
-import { CardSimple } from '@one/core';
+import React from 'react';
 
 export default function FullNodeCardNetworkName() {
   const { data: networkInfo, isLoading, error } = useGetNetworkInfoQuery();

@@ -1,5 +1,5 @@
-import { WalletType } from '@one/api';
-import type { Wallet } from '@one/api';
+import { WalletType } from '@xone-network/api';
+import type { Wallet } from '@xone-network/api';
 
 export default function getWalletPrimaryTitle(wallet: Wallet): string {
   switch (wallet.type) {

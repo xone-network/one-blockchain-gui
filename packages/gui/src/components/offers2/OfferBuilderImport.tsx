@@ -1,18 +1,12 @@
-import React from 'react';
-import { Trans, t } from '@lingui/macro';
-import {
-  Dropzone,
-  Flex,
-  // useOpenDialog,
-  useSerializedNavigationState,
-  useShowError,
-} from '@one/core';
-import { Box, Card, Typography } from '@mui/material';
-import { useGetOfferSummaryMutation } from '@one/api-react';
-// import OfferDataEntryDialog from '../offers/OfferDataEntryDialog';
 import fs, { Stats } from 'fs';
-// import { IpcRenderer } from 'electron';
+
+import { useGetOfferSummaryMutation } from '@xone-network/api-react';
+import { Dropzone, Flex, useSerializedNavigationState, useShowError } from '@xone-network/core';
+import { Trans, t } from '@lingui/macro';
+import { Box, Card, Typography } from '@mui/material';
+import React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+
 import ImportOfferBackground from './images/importOfferBackground.svg';
 import OfferFileIcon from './images/offerFileIcon.svg';
 
@@ -46,27 +40,14 @@ export default function OfferBuilderImport() {
   const [isParsing, setIsParsing] = React.useState<boolean>(false);
 
   function parseOfferData(
-    data: string,
-  ): [
-    offerData: string | undefined,
-    leadingText: string | undefined,
-    trailingText: string | undefined,
-  ] {
+    data: string
+  ): [offerData: string | undefined, leadingText: string | undefined, trailingText: string | undefined] {
     // Parse raw offer data looking for the bech32-encoded offer data and any surrounding text.
-    const matches = data.match(
-      /(?<leading>.*)(?<offer>offer1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]+)(?<trailing>.*)/s,
-    );
-    return [
-      matches?.groups?.offer,
-      matches?.groups?.leading,
-      matches?.groups?.trailing,
-    ];
+    const matches = data.match(/(?<leading>.*)(?<offer>offer1[qpzry9x8gf2tvdw0s3jn54khce6mua7l]+)(?<trailing>.*)/s);
+    return [matches?.groups?.offer, matches?.groups?.leading, matches?.groups?.trailing];
   }
 
-  async function parseOfferSummary(
-    rawOfferData: string,
-    offerFilePath: string | undefined,
-  ) {
+  async function parseOfferSummary(rawOfferData: string, offerFilePath: string | undefined) {
     const [offerData] = parseOfferData(rawOfferData);
     if (!offerData) {
       throw new Error(t`Could not parse offer data`);
@@ -162,7 +143,7 @@ export default function OfferBuilderImport() {
         pasteParse(text);
       })
       .catch((err) => {
-        console.log('Error during paste from clipboard', err);
+        console.error('Error during paste from clipboard', err);
       });
   });
 
@@ -177,26 +158,16 @@ export default function OfferBuilderImport() {
         cursor: 'pointer',
       }}
     >
-      <Dropzone
-        maxFiles={1}
-        onDrop={handleDrop}
-        processing={isParsing}
-        background={Background}
-      >
+      <Dropzone maxFiles={1} onDrop={handleDrop} processing={isParsing} background={Background}>
         <Flex flexDirection="column" alignItems="center">
           <OfferFileIcon />
           <Typography color="textSecondary" variant="h6" textAlign="center">
             <Trans>Drag & Drop an Offer File, Paste </Trans>
-            {isMac ? (
-              <Trans>(⌘V) a blob</Trans>
-            ) : (
-              <Trans>(Ctrl-V) a blob</Trans>
-            )}
+            {isMac ? <Trans>(⌘V) a blob</Trans> : <Trans>(Ctrl-V) a blob</Trans>}
           </Typography>
           <Typography color="textSecondary" textAlign="center">
             <Trans>
-              or <span style={{ color: '#5ECE71' }}>browse</span> on your
-              computer
+              or <span style={{ color: '#5ECE71' }}>browse</span> on your computer
             </Trans>
           </Typography>
         </Flex>

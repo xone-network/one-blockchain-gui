@@ -1,9 +1,10 @@
-import React, { useEffect, type ReactNode } from 'react';
+import { useGetLoggedInFingerprintQuery } from '@xone-network/api-react';
+import { LayoutLoading } from '@xone-network/core';
 import { Trans } from '@lingui/macro';
-import { useUpdate } from 'react-use';
+import React, { useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetLoggedInFingerprintQuery } from '@one/api-react';
-import { LayoutLoading } from '@one/core';
+import { useUpdate } from 'react-use';
+
 import useEnableAutoLogin from '../../hooks/useEnableAutoLogin';
 
 export type AppAutoLoginProps = {
@@ -19,23 +20,23 @@ export default function AppAutoLogin(props: AppAutoLoginProps) {
   const [enableAutoLogin] = useEnableAutoLogin();
   const { data: fingerprint, isLoading } = useGetLoggedInFingerprintQuery();
 
-  async function processFingerprint() {
-    if (isLoading || isFingerprintReady) {
-      return;
-    }
-
-    isFingerprintReady = true;
-
-    if (fingerprint && enableAutoLogin) {
-      navigate('/dashboard/wallets');
-    }
-
-    update();
-  }
-
   useEffect(() => {
+    async function processFingerprint() {
+      if (isLoading || isFingerprintReady) {
+        return;
+      }
+
+      isFingerprintReady = true;
+
+      if (fingerprint && enableAutoLogin) {
+        navigate('/dashboard/wallets');
+      }
+
+      update();
+    }
+
     processFingerprint();
-  }, [isLoading, fingerprint]);
+  }, [isLoading, fingerprint, enableAutoLogin, update, navigate]);
 
   if (!isFingerprintReady) {
     return (

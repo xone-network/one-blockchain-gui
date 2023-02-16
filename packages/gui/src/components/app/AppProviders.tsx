@@ -1,6 +1,4 @@
-import React, { ReactNode, useEffect, useState, Suspense } from 'react';
-import { Provider } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { store, api } from '@xone-network/api-react';
 import {
   useDarkMode,
   sleep,
@@ -12,23 +10,31 @@ import {
   dark,
   light,
   ErrorBoundary,
-} from '@one/core';
-import { Typography } from '@mui/material';
-import { store, api } from '@one/api-react';
-import { Trans } from '@lingui/macro';
-import { i18n, defaultLocale, locales } from '../../config/locales';
-import AppState from './AppState';
-import WebSocket from 'ws';
-import isElectron from 'is-electron';
+} from '@xone-network/core';
 import { nativeTheme } from '@electron/remote';
+import { Trans } from '@lingui/macro';
+import { Typography } from '@mui/material';
+import isElectron from 'is-electron';
+import React, { ReactNode, useEffect, useState, Suspense } from 'react';
+import { Provider } from 'react-redux';
+import { Outlet } from 'react-router-dom';
+import WebSocket from 'ws';
+
+import { i18n, defaultLocale, locales } from '../../config/locales';
+import LRUsProvider from '../lrus/LRUsProvider';
+import NotificationsProvider from '../notification/NotificationsProvider';
+import WalletConnectProvider, { WalletConnectOneProjectId } from '../walletConnect/WalletConnectProvider';
+import AppState from './AppState';
 
 async function waitForConfig() {
+  // eslint-disable-next-line no-constant-condition -- We want this
   while (true) {
+    // eslint-disable-next-line no-await-in-loop -- We want to run promises in series
     const config = await window.ipcRenderer.invoke('getConfig');
     if (config) {
       return config;
     }
-
+    // eslint-disable-next-line no-await-in-loop -- We want to run promises in series
     await sleep(50);
   }
 }
@@ -58,7 +64,7 @@ export default function App(props: AppProps) {
         cert,
         key,
         webSocket: WebSocket,
-      }),
+      })
     );
 
     setIsReady(true);
@@ -70,27 +76,30 @@ export default function App(props: AppProps) {
 
   return (
     <Provider store={store}>
-      <LocaleProvider
-        i18n={i18n}
-        defaultLocale={defaultLocale}
-        locales={locales}
-      >
+      <LocaleProvider i18n={i18n} defaultLocale={defaultLocale} locales={locales}>
         <ThemeProvider theme={theme} fonts global>
           <ErrorBoundary>
-            <ModalDialogsProvider>
-              {isReady ? (
-                <Suspense fallback={<LayoutLoading />}>
-                  <AppState>{outlet ? <Outlet /> : children}</AppState>
-                </Suspense>
-              ) : (
-                <LayoutLoading>
-                  <Typography variant="body1">
-                    <Trans>Loading configuration</Trans>
-                  </Typography>
-                </LayoutLoading>
-              )}
-              <ModalDialogs />
-            </ModalDialogsProvider>
+            <LRUsProvider>
+              <ModalDialogsProvider>
+                {isReady ? (
+                  <Suspense fallback={<LayoutLoading />}>
+                    <WalletConnectProvider projectId={WalletConnectOneProjectId}>
+                      <NotificationsProvider>
+                        <AppState>{outlet ? <Outlet /> : children}</AppState>
+                        <ModalDialogs />
+                      </NotificationsProvider>
+                    </WalletConnectProvider>
+                  </Suspense>
+                ) : (
+                  <LayoutLoading>
+                    <Typography variant="body1">
+                      <Trans>Loading configuration</Trans>
+                    </Typography>
+                    <ModalDialogs />
+                  </LayoutLoading>
+                )}
+              </ModalDialogsProvider>
+            </LRUsProvider>
           </ErrorBoundary>
         </ThemeProvider>
       </LocaleProvider>

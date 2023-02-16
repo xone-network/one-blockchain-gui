@@ -1,6 +1,8 @@
+import type { Wallet } from '@xone-network/api';
+import { WalletType } from '@xone-network/api';
 import { useMemo } from 'react';
+
 import { useGetWalletsQuery } from '../services';
-import { Wallet, WalletType } from '@one/api';
 
 export default function useGetNFTWallets() {
   const { data, isLoading } = useGetWalletsQuery();
@@ -10,7 +12,7 @@ export default function useGetNFTWallets() {
     }
 
     return data.filter((wallet: Wallet) => wallet.type === WalletType.NFT);
-  }, [data]);
+  }, [data, isLoading]);
 
   return { wallets: nftWallets, isLoading };
 }

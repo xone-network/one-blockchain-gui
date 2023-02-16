@@ -1,9 +1,7 @@
-import React from 'react';
-import { useWatch } from 'react-hook-form';
-import { Trans } from '@lingui/macro';
 import {
   Amount,
   CopyToClipboard,
+  EstimatedFee,
   Fee,
   Flex,
   FormatLargeNumber,
@@ -13,12 +11,18 @@ import {
   TextField,
   Tooltip,
   TooltipIcon,
-} from '@one/core';
-import { Box, Typography, IconButton } from '@mui/material';
+} from '@xone-network/core';
+import { Trans } from '@lingui/macro';
 import { Remove } from '@mui/icons-material';
+import { Box, Typography, IconButton } from '@mui/material';
+import React from 'react';
+import { useWatch } from 'react-hook-form';
+
 import useOfferBuilderContext from '../../hooks/useOfferBuilderContext';
-import OfferBuilderTokenSelector from './OfferBuilderTokenSelector';
+import OfferBuilderAmountWithRoyalties from './OfferBuilderAmountWithRoyalties';
 import OfferBuilderRoyaltyPayouts from './OfferBuilderRoyaltyPayouts';
+import OfferBuilderTokenSelector from './OfferBuilderTokenSelector';
+import OfferBuilderValueSearch from './OfferBuilderValueSearch';
 
 export type OfferBuilderValueProps = {
   name: string;
@@ -31,6 +35,7 @@ export type OfferBuilderValueProps = {
   showAmountInMojos?: boolean;
   usedAssets?: string[];
   disableReadOnly?: boolean;
+  onSelectNFT: (nftId: string) => void;
   warnUnknownCAT?: boolean;
   amountWithRoyalties?: string;
   royaltyPayments?: Record<string, any>[];
@@ -48,28 +53,28 @@ export default function OfferBuilderValue(props: OfferBuilderValueProps) {
     showAmountInMojos,
     usedAssets,
     disableReadOnly = false,
+    onSelectNFT,
     warnUnknownCAT = false,
     amountWithRoyalties,
     royaltyPayments,
   } = props;
-  const {
-    readOnly: builderReadOnly,
-    offeredUnknownCATs,
-    requestedUnknownCATs,
-  } = useOfferBuilderContext();
+
+  const { readOnly: builderReadOnly, offeredUnknownCATs, requestedUnknownCATs } = useOfferBuilderContext();
+
   const value = useWatch({
     name,
   });
+
   const readOnly = disableReadOnly ? false : builderReadOnly;
-  const displayValue = amountWithRoyalties ? (
-    amountWithRoyalties
-  ) : !value ? (
-    <Trans>Not Available</Trans>
-  ) : ['amount', 'fee', 'token'].includes(type) && Number.isFinite(value) ? (
-    <FormatLargeNumber value={value} />
-  ) : (
-    value
-  );
+  const displayValue =
+    amountWithRoyalties ||
+    (!value ? (
+      <Trans>Not Available</Trans>
+    ) : ['amount', 'fee', 'token'].includes(type) && Number.isFinite(value) ? (
+      <FormatLargeNumber value={value} />
+    ) : (
+      value
+    ));
 
   return (
     <Flex flexDirection="column" minWidth={0} gap={1}>
@@ -94,19 +99,12 @@ export default function OfferBuilderValue(props: OfferBuilderValueProps) {
                     <Flex flexDirection="column" gap={1} maxWidth={200}>
                       {displayValue}
                       {type === 'token' ? (
-                        <Link
-                          href={`https://www.taildatabase.com/tail/${value.toLowerCase()}`}
-                          target="_blank"
-                        >
+                        <Link href={`https://www.taildatabase.com/tail/${value.toLowerCase()}`} target="_blank">
                           <Trans>Search on Tail Database</Trans>
                         </Link>
                       ) : null}
                     </Flex>
-                    <CopyToClipboard
-                      value={displayValue}
-                      fontSize="small"
-                      invertColor
-                    />
+                    <CopyToClipboard value={displayValue} fontSize="small" invertColor />
                   </Flex>
                 </Flex>
               )
@@ -149,23 +147,23 @@ export default function OfferBuilderValue(props: OfferBuilderValueProps) {
                 fullWidth
               />
             ) : type === 'fee' ? (
-              <Fee
-                variant="filled"
-                color="secondary"
-                label={label}
-                name={name}
-                required
-                fullWidth
-              />
+              builderReadOnly ? (
+                <EstimatedFee
+                  txType="acceptOffer"
+                  variant="filled"
+                  color="secondary"
+                  label={label}
+                  name={name}
+                  fullWidth
+                />
+              ) : (
+                <Fee variant="filled" color="secondary" label={label} name={name} fullWidth />
+              )
             ) : type === 'text' ? (
-              <TextField
-                variant="filled"
-                color="secondary"
-                label={label}
-                name={name}
-                required
-                fullWidth
-              />
+              <>
+                <TextField variant="filled" color="secondary" label={label} name={name} required fullWidth />
+                <OfferBuilderValueSearch value={value} onSelectNFT={onSelectNFT} />
+              </>
             ) : type === 'token' ? (
               <OfferBuilderTokenSelector
                 variant="filled"
@@ -199,16 +197,13 @@ export default function OfferBuilderValue(props: OfferBuilderValueProps) {
           <TooltipIcon>
             {offeredUnknownCATs?.includes(value) ? (
               <Typography variant="caption" color="textSecondary">
-                <Trans>
-                  Offer cannot be accepted because you don&apos;t possess the
-                  requested assets
-                </Trans>
+                <Trans>Offer cannot be accepted because you don&apos;t possess the requested assets</Trans>
               </Typography>
             ) : requestedUnknownCATs?.includes(value) ? (
               <Typography variant="caption" color="textSecondary">
                 <Trans>
-                  Warning: Verify that the offered CAT asset IDs match the asset
-                  IDs of the tokens you expect to receive.
+                  Warning: Verify that the offered CAT asset IDs match the asset IDs of the tokens you expect to
+                  receive.
                 </Trans>
               </Typography>
             ) : null}
@@ -219,6 +214,13 @@ export default function OfferBuilderValue(props: OfferBuilderValueProps) {
         <Typography variant="caption" color="textSecondary">
           {caption}
         </Typography>
+      )}
+      {!builderReadOnly && royaltyPayments && amountWithRoyalties && (
+        <OfferBuilderAmountWithRoyalties
+          originalAmount={value}
+          totalAmount={amountWithRoyalties}
+          royaltyPayments={royaltyPayments}
+        />
       )}
     </Flex>
   );

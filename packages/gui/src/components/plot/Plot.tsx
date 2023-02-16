@@ -1,8 +1,9 @@
+import { Flex, LayoutDashboardSub } from '@xone-network/core';
 import React from 'react';
-import { Flex, LayoutDashboardSub } from '@one/core';
 import { Route, Routes } from 'react-router-dom';
-import PlotOverview from './overview/PlotOverview';
+
 import PlotAdd from './add/PlotAdd';
+import PlotOverview from './overview/PlotOverview';
 
 export default function Plot() {
   return (

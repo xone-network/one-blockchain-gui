@@ -1,7 +1,8 @@
-import React from 'react';
 import { Trans } from '@lingui/macro';
 import { Box } from '@mui/material';
+import React from 'react';
 import styled from 'styled-components';
+
 import StateColor from '../../constants/StateColor';
 import Amount, { AmountProps } from '../Amount';
 
@@ -23,7 +24,7 @@ export default function Fee(props: FeeProps) {
         const isLow = mojo.gt('0') && mojo.lt('1');
 
         if (!value) {
-          return;
+          return null;
         }
 
         if (isHigh) {
